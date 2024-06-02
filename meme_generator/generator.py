@@ -5,6 +5,10 @@ from PIL import ImageDraw
 import pandas as pd
 import os
 from tqdm import tqdm
+from langdetect import detect
+
+
+LANGUAGES = ["en", "de"]
 
 
 def make_meme(topString, bottomString, filename, output_file):
@@ -34,12 +38,12 @@ def make_meme(topString, bottomString, filename, output_file):
 
     # Find top centered position for top text
     topTextPositionX = (imageSize[0] / 2) - (topTextSize[0] / 2)
-    topTextPositionY = 0
+    topTextPositionY = 8  # Padding from the top
     topTextPosition = (topTextPositionX, topTextPositionY)
 
     # Find bottom centered position for bottom text
     bottomTextPositionX = (imageSize[0] / 2) - (bottomTextSize[0] / 2)
-    bottomTextPositionY = imageSize[1] - bottomTextSize[1]*1.5
+    bottomTextPositionY = imageSize[1] - bottomTextSize[1] - 15  # Padding from the bottom
     bottomTextPosition = (bottomTextPositionX, bottomTextPositionY)
 
     # Draw outlines
@@ -70,27 +74,45 @@ if __name__ == '__main__':
 
     folder_path = args.memes
     output_folder = args.generate_folder
-    headers = ['template', 'instance_id', 'caption', 'img_link', 'img']  # Replace with your actual column names
+    headers = ['label', 'template', 'image']  # Replace with your actual column names
 
     # Load the text file into a DataFrame
-    df = pd.read_csv(os.path.join(folder_path, "captions.txt"), sep='\t', names=headers)
-    df = df.drop_duplicates()
-    print(len(df))
+    df_template = pd.read_csv(os.path.join(folder_path, "templates.txt"), sep='\t', names=headers)
+    df_template = df_template.drop_duplicates()
 
-    for index, row in tqdm(df.iterrows()):
-        # Create Path
-        template_name = row["template"].split("/")[-1]
-        output_path = os.path.join(output_folder, template_name, "en")
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-        output_path = os.path.join(output_path, row["instance_id"].split("/")[-1] + ".jpg")
+    for language in LANGUAGES:
+        headers = ['template', 'instance_id', 'caption_translated', 'caption_original']
+        # Load the text file into a DataFrame
+        df = pd.read_csv(os.path.join(output_folder, "caption_translation", language + ".txt"), sep='\t', names=headers)
+        df = df.drop_duplicates()
+        template_ids = []
 
-        # Get Bottom & Top Strings
-        top = row["caption"].split("<sep>")[0]
-        bottom = row["caption"].split("<sep>")[1]
+        for index, row in tqdm(df.iterrows()):
+            # Create Path
+            template_name = row["template"].split("/")[-1]
+            output_path = os.path.join(output_folder, "images", template_name, language)
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
+            output_path = os.path.join(output_path, str(row["instance_id"]) + ".jpg")
 
-        # Get Image Path
-        image_file = row["img_link"].split("/")[-1]
-        image_file = os.path.join(folder_path, "images", image_file)
+            # Get Bottom & Top Strings
+            top = row["caption_translated"].split("<sep>")[0].strip()
+            bottom = row["caption_translated"].split("<sep>")[1].strip()
 
-        make_meme(top, bottom, image_file, output_path)
+            if top == "<emp>":
+                top = ""
+            if bottom == "<emp>":
+                bottom = ""
+
+            # Get Image Path
+            template_name = row["template"]
+            if not df_template.empty:
+                # For existing Deephumor dataset
+                image_file = df_template[df_template["label"] == template_name]["image"].iloc[0].split("/")[-1]
+                image_file = os.path.join(folder_path, "images", image_file)
+            else:
+                # For own crawled dataset
+                image_file = os.path.join(folder_path, "images",
+                                          template_name + ".jpg")
+            make_meme(top, bottom, image_file, output_path)
+            template_ids.append(str(row["instance_id"]))

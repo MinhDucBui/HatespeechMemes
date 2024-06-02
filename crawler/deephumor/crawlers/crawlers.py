@@ -193,7 +193,7 @@ def download_htmls(templates, templates_file):
         print(f"HTML content downloaded and saved: {output_file_path}")
         # save template information and load image
         name = url.split("/")[-1]
-        templates_file.write(f'{url}\t{name}\n')
+        templates_file.write(f'')
     templates_file.close()
     return templates
 
@@ -309,7 +309,7 @@ class MemeGeneratorCrawler:
                 continue
             text = top + ' ' + SPECIAL_TOKENS['SEP'] + ' ' + bot
             image_path = image_path.split("/")[-1].split(".")[0].split("_")[-1]
-            link = label_name + "_variant=" + image_path
+            link = label_name + "_" + image_path
             instance_id = instance_id.split("/")[-1]
             all_captions.append(
                 f'{link}\t{instance_id}\t{text}\n')

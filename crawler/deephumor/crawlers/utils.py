@@ -20,7 +20,7 @@ def load_image(name, image_url, save_dir='.'):
         str: name of the file
     """
     # Extract the file name from the URL
-    file_name = name + "_" + image_url.split('/')[-1]
+    file_name = name + "_variant=" + image_url.split('/')[-1]
     image_path = os.path.join(save_dir, file_name)
 
     # Check if the image already exists
