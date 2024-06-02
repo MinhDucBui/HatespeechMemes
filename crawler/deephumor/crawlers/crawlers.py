@@ -1,6 +1,6 @@
 import os
 import time
-from lxml import html, etree
+from lxml import html
 from selenium.webdriver.chrome.options import Options
 from .utils import time_to_str, load_image
 from deephumor.data import SPECIAL_TOKENS
@@ -16,7 +16,6 @@ from selenium.webdriver.common.by import By
 HTML_PATH = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/htmls"
 
 
-
 def crawl_templates(page=1):
     """Crawls templates from All-time page.
 
@@ -25,17 +24,17 @@ def crawl_templates(page=1):
     """
 
     meme_templates = []
-    links = [#"https://memegenerator.net/Ordinary-Muslim-Man",]
-             #"https://memegenerator.net/Asian-College-Freshman"]
-             #"https://memegenerator.net/Sassy-Black-Woman",
-             #"https://memegenerator.net/Scumbag-Catholic-Priest"]
-            # "https://memegenerator.net/Scumbag-Whitehouse",
-            # "https://memegenerator.net/Scumbag-God",
-            # "https://memegenerator.net/Scumbag-America",
-            # "https://memegenerator.net/Angry-Muslim-Guy",
-            # "https://memegenerator.net/Confused-Muslim-Girl",
-            # "https://memegenerator.net/Stereotypical-Redneck",
-             "https://memegenerator.net/Stereotypical-Indian-Telemarketer"]
+    links = [  # "https://memegenerator.net/Ordinary-Muslim-Man",]
+        # "https://memegenerator.net/Asian-College-Freshman"]
+        # "https://memegenerator.net/Sassy-Black-Woman",
+        # "https://memegenerator.net/Scumbag-Catholic-Priest"]
+        # "https://memegenerator.net/Scumbag-Whitehouse",
+        # "https://memegenerator.net/Scumbag-God",
+        # "https://memegenerator.net/Scumbag-America",
+        # "https://memegenerator.net/Angry-Muslim-Guy",
+        # "https://memegenerator.net/Confused-Muslim-Girl",
+        # "https://memegenerator.net/Stereotypical-Redneck",
+        "https://memegenerator.net/Stereotypical-Indian-Telemarketer"]
     """
     try:sasdasd
         r = requests.get(url)
@@ -85,7 +84,6 @@ def chrome_webpage(url):
     except TimeoutException:
         print(f"{url} Loading took too much time!")
 
-
     # Get scroll height
     last_height = driver.execute_script("return document.body.scrollHeight")
     SCROLL_PAUSE_TIME = 5
@@ -96,7 +94,8 @@ def chrome_webpage(url):
     while True:
         # Scroll down to bottom
         try:
-            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            driver.execute_script(
+                "window.scrollTo(0, document.body.scrollHeight);")
         except Exception as e:
             print(f"An error occurred: {e}")
             break
@@ -104,7 +103,8 @@ def chrome_webpage(url):
         time.sleep(SCROLL_PAUSE_TIME)
         # Calculate new scroll height and compare with last scroll height
         try:
-            new_height = driver.execute_script("return document.body.scrollHeight")
+            new_height = driver.execute_script(
+                "return document.body.scrollHeight")
         except Exception as e:
             print(f"An error occurred: {e}")
             break
@@ -359,7 +359,8 @@ class MemeGeneratorCrawler:
                               max_tokens=self.max_tokens):
                 continue
             text = top + ' ' + SPECIAL_TOKENS['SEP'] + ' ' + bot
-            all_captions.append(f'{link}\t{instance_id}\t{text}\t{src}\t{image_path}\n')
+            all_captions.append(
+                f'{link}\t{instance_id}\t{text}\t{src}\t{image_path}\n')
 
             """
             print(f'{time_to_str(time.time() - start_time)}, '

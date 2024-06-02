@@ -38,7 +38,8 @@ def memeify_image(img, top='', bottom='', font_path=MEME_FONT_PATH):
     return img
 
 
-def get_maximal_font(img, text, font_size=64, text_width=0.94, font_path=MEME_FONT_PATH):
+def get_maximal_font(img, text, font_size=64, text_width=0.94,
+                     font_path=MEME_FONT_PATH):
     """Computes the font of maximal size that fits the text.
 
     Args:
@@ -186,7 +187,8 @@ def caption_image(img, text_lines, font, pos='top'):
         PIL.Image: captioned image
     """
     draw = ImageDraw.Draw(img)
-    w, h = draw.textsize(text_lines[0], font)  # measure the size the text will take
+    # measure the size the text will take
+    w, h = draw.textsize(text_lines[0], font)
 
     # text border size
     border_size = font.size // 18
