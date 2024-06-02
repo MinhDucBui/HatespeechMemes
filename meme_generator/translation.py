@@ -4,7 +4,7 @@ import pandas as pd
 import os
 from tqdm import tqdm
 
-LANGUAGES = ["en", "de"]
+LANGUAGES = ["de"]
 SIZE = 100
 
 
@@ -19,10 +19,10 @@ if __name__ == '__main__':
 
     output_folder = args.generate_folder
     memes_folder = args.memes
-    headers = ['template', 'instance_id', 'caption']  # Replace with your actual column names
+    headers = ['template', 'instance_id', 'caption', 'caption_original']  # Replace with your actual column names
 
     # Load the text file into a DataFrame
-    df_selection = pd.read_csv(os.path.join(memes_folder, "captions.txt"),
+    df_selection = pd.read_csv(os.path.join(output_folder, "caption_translation/en.txt"),
                                sep='\t', names=headers)
 
     translator = Translator()

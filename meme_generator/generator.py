@@ -11,53 +11,68 @@ from langdetect import detect
 LANGUAGES = ["en", "de"]
 
 
-def make_meme(topString, bottomString, filename, output_file):
+def make_meme(topString, bottomString, filename, output_file, font_path="/Library/Fonts/Impact.ttf", font_size=20):
+    # Open the image and get its size
     img = Image.open(filename)
-    imageSize = img.size
-
-    # Find the biggest font size that works
-    fontSize = int(imageSize[1] / 5)
-    font = ImageFont.truetype("/Library/Fonts/Impact.ttf", fontSize)
+    image_size = img.size
     draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype(font_path, font_size)
 
     # Function to get text size using textbbox
     def get_text_size(text, font):
         bbox = draw.textbbox((0, 0), text, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
-        return (text_width, text_height)
+        return text_width, text_height
 
-    topTextSize = get_text_size(topString, font)
-    bottomTextSize = get_text_size(bottomString, font)
+    # Function to split text into multiple lines if it exceeds the image width
+    def split_text(text, font, max_width):
+        words = text.split()
+        lines = []
+        current_line = []
 
-    while topTextSize[0] > imageSize[0] - 20 or bottomTextSize[0] > imageSize[0] - 20:
-        fontSize -= 1
-        font = ImageFont.truetype("/Library/Fonts/Impact.ttf", fontSize)
-        topTextSize = get_text_size(topString, font)
-        bottomTextSize = get_text_size(bottomString, font)
+        for word in words:
+            current_line.append(word)
+            if get_text_size(' '.join(current_line), font)[0] > max_width:
+                current_line.pop()
+                lines.append(' '.join(current_line))
+                current_line = [word]
 
-    # Find top centered position for top text
-    topTextPositionX = (imageSize[0] / 2) - (topTextSize[0] / 2)
-    topTextPositionY = 8  # Padding from the top
-    topTextPosition = (topTextPositionX, topTextPositionY)
+        lines.append(' '.join(current_line))
+        return lines
 
-    # Find bottom centered position for bottom text
-    bottomTextPositionX = (imageSize[0] / 2) - (bottomTextSize[0] / 2)
-    bottomTextPositionY = imageSize[1] - bottomTextSize[1] - 15  # Padding from the bottom
-    bottomTextPosition = (bottomTextPositionX, bottomTextPositionY)
+    # Split top and bottom strings if needed
+    max_width = image_size[0] - 20  # 10 pixels padding on each side
+    top_lines = split_text(topString, font, max_width)
+    bottom_lines = split_text(bottomString, font, max_width)
 
-    # Draw outlines
-    outlineRange = int(fontSize / 15)
-    for x in range(-outlineRange, outlineRange + 1):
-        for y in range(-outlineRange, outlineRange + 1):
-            draw.text(
-                (topTextPosition[0] + x, topTextPosition[1] + y), topString, (0, 0, 0), font=font)
-            draw.text(
-                (bottomTextPosition[0] + x, bottomTextPosition[1] + y), bottomString, (0, 0, 0), font=font)
+    # Calculate positions for top and bottom text
+    top_text_position_y = 10  # Padding from the top
+    bottom_text_height = sum([get_text_size(line, font)[1] for line in bottom_lines]) + 10 * (len(bottom_lines) - 1)
+    bottom_text_position_y = image_size[1] - bottom_text_height - 10  # Padding from the bottom
 
-    # Draw the text
-    draw.text(topTextPosition, topString, (255, 255, 255), font=font)
-    draw.text(bottomTextPosition, bottomString, (255, 255, 255), font=font)
+    # Draw outlines and text for top lines
+    outline_range = 2
+    for i, line in enumerate(top_lines):
+        text_width, text_height = get_text_size(line, font)
+        text_position_x = (image_size[0] - text_width) / 2
+        text_position_y = top_text_position_y + i * (text_height + 10)
+
+        for x in range(-outline_range, outline_range + 1):
+            for y in range(-outline_range, outline_range + 1):
+                draw.text((text_position_x + x, text_position_y + y), line, (0, 0, 0), font=font)
+        draw.text((text_position_x, text_position_y), line, (255, 255, 255), font=font)
+
+    # Draw outlines and text for bottom lines
+    for i, line in enumerate(bottom_lines):
+        text_width, text_height = get_text_size(line, font)
+        text_position_x = (image_size[0] - text_width) / 2
+        text_position_y = bottom_text_position_y + i * (text_height + 10)
+
+        for x in range(-outline_range, outline_range + 1):
+            for y in range(-outline_range, outline_range + 1):
+                draw.text((text_position_x + x, text_position_y + y), line, (0, 0, 0), font=font)
+        draw.text((text_position_x, text_position_y), line, (255, 255, 255), font=font)
 
     img.save(output_file, 'JPEG')
 
