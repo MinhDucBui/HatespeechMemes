@@ -32,12 +32,14 @@ if __name__ == '__main__':
                         help='maximum number of tokens in the caption text')
 
     args = parser.parse_args()
-    assert args.source == 'memegenerator.net', 'Only memegenerator.net is supported'
+    assert args.source == 'memegenerator.net', 'Only memegenerator.net'
 
     crawler = MemeGeneratorCrawler(
         poolsize=args.poolsize,
-        min_len=args.min_len, max_len=args.max_len, max_tokens=args.max_tokens,
-        detect_english=args.detect_english, detect_duplicates=args.detect_duplicates
+        min_len=args.min_len, max_len=args.max_len,
+        max_tokens=args.max_tokens,
+        detect_english=args.detect_english,
+        detect_duplicates=args.detect_duplicates
     )
 
     crawler.crawl_dataset(

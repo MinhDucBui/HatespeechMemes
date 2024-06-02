@@ -36,7 +36,7 @@ def crawl_templates(page=1):
         # "https://memegenerator.net/Stereotypical-Redneck",
         "https://memegenerator.net/Stereotypical-Indian-Telemarketer"]
     """
-    try:sasdasd
+    try:
         r = requests.get(url)
         tree = html.fromstring(r.content)
         divs = tree.xpath('//div[@class="char-img"]/a')
@@ -87,7 +87,7 @@ def chrome_webpage(url):
     # Get scroll height
     last_height = driver.execute_script("return document.body.scrollHeight")
     SCROLL_PAUSE_TIME = 5
-    MAX_SCOLL = 40
+    MAX_SCOLL = 200
     count_scroll = 0
     number_scroll_trying = 0
     MAX_SCROLL_TRYING = 10
@@ -118,12 +118,14 @@ def chrome_webpage(url):
                 break
         else:
             number_scroll_trying = 0
+            print(f"Scroll Count: {count_scroll}")
+            count_scroll += 1
+
         driver.delete_all_cookies()
         if count_scroll >= MAX_SCOLL:
             break
         last_height = new_height
-        print(f"Scroll Count: {count_scroll}")
-        count_scroll += 1
+
         # Get the rendered HTML content
         html_content = driver.page_source
 
@@ -190,6 +192,7 @@ def download_htmls(templates, templates_file):
             output_file.write(html_content)
         print(f"HTML content downloaded and saved: {output_file_path}")
         # save template information and load image
+        name = url.split("/")[-1]
         templates_file.write(f'{url}\t{name}\n')
     templates_file.close()
     return templates
@@ -288,66 +291,12 @@ class MemeGeneratorCrawler:
         # das
         all_captions = []
         for meme in memes:
-
-            """
-            if self.detect_english:
-                # check captions language
-                prob_en = np.mean([english_prob(text) for _ in range(5)])
-                if prob_en < 0.9:
-                    # non-english, stop processing
-                    print(f'{time_to_str(time.time() - start_time)}, '
-                            f'{100 * float(total_captions) / num_templates / num_captions:5.2f}%: '
-                            f'   NON_ENGLISH {label} - {len(self.captions[link])} captions (eng:{prob_en:.3f})')
-                    continue
-            else:
-                prob_en = None
-            """
-
-            # ToDo: Remove Duplicates
-            """
-            if self.detect_duplicates:
-                # check duplicates and keep collecting to get `n_captions_per_template`
-                unique_captions = []
-                while True:
-
-                    # process crawled captions for duplicates (slow..)
-                    for (score, top, bottom) in self.captions[link]:
-                        is_unique = True
-                        text = (top + ' ' + bottom).lower()
-
-                        for (_, other_top, other_bottom) in unique_captions:
-                            other_text = (other_top + ' ' +
-                                            other_bottom).lower()
-                            if sim_ratio(text, other_text) > 0.9:
-                                is_unique = False
-                                break
-
-                        if is_unique:
-                            unique_captions.append((score, top, bottom))
-
-                    self.captions[link] = []
-                    if len(unique_captions) >= num_captions:
-                        break
-
-                    # load five more pages
-                    for i in range(page + 1, page + 10):
-                        crawl_template_page(link)
-                    page = i
-            else:
-                unique_captions = self.captions[link]
-            """
-            # ToDo: Check scoring
-
-            """
-            # take top captions by their score
-            captions = list(sorted(unique_captions, key=lambda x: -x[0]))
-            captions = captions[:num_captions]
-            """
             link = meme["url"]
+            label_name = link.split("/")[-1]
             instance_id = meme["instance_id"]
             src = meme["img_src"]
             captions = meme["text"]
-            image_path = load_image(src, images_dir)
+            image_path = load_image(label_name, src, images_dir)
 
             # save captions
             top = captions[0]
@@ -359,14 +308,11 @@ class MemeGeneratorCrawler:
                               max_tokens=self.max_tokens):
                 continue
             text = top + ' ' + SPECIAL_TOKENS['SEP'] + ' ' + bot
+            image_path = image_path.split("/")[-1].split(".")[0].split("_")[-1]
+            link = label_name + "_variant=" + image_path
+            instance_id = instance_id.split("/")[-1]
             all_captions.append(
-                f'{link}\t{instance_id}\t{text}\t{src}\t{image_path}\n')
-
-            """
-            print(f'{time_to_str(time.time() - start_time)}, '
-                    f'{100 * float(total_captions) / num_templates / num_captions:5.2f}%: '
-                    f'   {label} - {len(captions)} captions ({total_captions}) (pid:{page}, en:{prob_en:.3f})')
-            """
+                f'{link}\t{instance_id}\t{text}\n')
 
         time.sleep(0.5)
         all_captions = list(set(all_captions))

@@ -4,51 +4,66 @@ import pandas as pd
 import os
 from tqdm import tqdm
 
-LANGUAGES = ["de"]
-
-def translation(topString, bottomString, language):
-    translator = Translator()
+LANGUAGES = ["en", "de"]
+SIZE = 100
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
-    parser.add_argument('--memes', '-m', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/memes')
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
-    parser.add_argument('--crawled', '-c', required=True, type=str,
-                         help='directory where the dataset should be stored')
+    parser.add_argument('--memes', '-m', type=str,
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/memes')
+
     args = parser.parse_args()
 
-    folder_path = args.memes
     output_folder = args.generate_folder
-
-    headers = ['template', 'id', 'caption']  # Replace with your actual column names
+    memes_folder = args.memes
+    headers = ['template', 'instance_id', 'caption']  # Replace with your actual column names
 
     # Load the text file into a DataFrame
-    df = pd.read_csv(os.path.join(folder_path, "captions.txt"), sep='\t', names=headers)
-    df = df.drop_duplicates()
+    df_selection = pd.read_csv(os.path.join(memes_folder, "captions.txt"),
+                               sep='\t', names=headers)
 
     translator = Translator()
+
     for language in LANGUAGES:
         all_captions = []
-        for index, row in tqdm(df.iterrows()):
-            print(row)
+        for index, row in tqdm(df_selection.iterrows()):
             # Get Bottom & Top Strings
-            top = row["caption"].split("<sep>")[0].strip()
-            bottom = row["caption"].split("<sep>")[1].strip()
+            try:
+                top = row["caption"].split("<sep>")[0].strip()
+                bottom = row["caption"].split("<sep>")[1].strip()
+                text_original = top + ' ' + "<sep>" + ' ' + bottom
+            except IndexError as e:
+                print("Error:", e)
+                print("Error: Caption format incorrect for {}".format(index))
 
             # Google Translation
-            if top != "":
-                top_trans = translator.translate(top, src='en', dest="de").text
-            if bottom != "":
-                bottom_trans = translator.translate(bottom, src='en', dest="de").text
-            text = top_trans + ' ' + "<sep>" + ' ' + bottom_trans
+            SEPERATOR = " // "
+            text = top + SEPERATOR + bottom
+            if language != "en":
+                text = translator.translate(text, src='en', dest=language).text
+
+            # Postprocessing of seperator
+            # text = text.replace("<Schritt>", "<sep>")
+            # text = text.replace("<Sep>", "<sep>")
+            # text = text.replace("<step>", "<sep>")
+            if SEPERATOR not in text:
+                # Then have to translate top and bottom separately
+                top_trans = ""
+                bottom_trans = ""
+                if top != "":
+                    top_trans = translator.translate(top, src='en', dest="de").text
+                if bottom != "":
+                    bottom_trans = translator.translate(bottom, src='en', dest="de").text
+                text = top_trans + ' ' + "<sep>" + ' ' + bottom_trans
+            else:
+                text = text.replace(SEPERATOR, " <sep> ")
+
             link = row["template"]
             instance_id = row["instance_id"]
-            src = row["img_link"]
-            image_path = row["img"]
-            all_captions.append(f'{link}\t{instance_id}\t{text}\t{src}\t{image_path}\n')
+            all_captions.append(f'{link}\t{instance_id}\t{text}\t{text_original}\n')
 
         # Create Path
         output_path = os.path.join(output_folder, "caption_translation")

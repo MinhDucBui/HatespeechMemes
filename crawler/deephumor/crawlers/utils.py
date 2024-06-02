@@ -9,7 +9,7 @@ def time_to_str(time):
     return f'{int(time / 60.):3d}:{(time % 60.):05.2f}'
 
 
-def load_image(image_url, save_dir='.'):
+def load_image(name, image_url, save_dir='.'):
     """Loads image by url.
 
     Args:
@@ -20,7 +20,7 @@ def load_image(image_url, save_dir='.'):
         str: name of the file
     """
     # Extract the file name from the URL
-    file_name = image_url.split('/')[-1]
+    file_name = name + "_" + image_url.split('/')[-1]
     image_path = os.path.join(save_dir, file_name)
 
     # Check if the image already exists
