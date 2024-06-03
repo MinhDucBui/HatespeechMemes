@@ -14,18 +14,34 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
 HTML_PATH = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/htmls"
-LINKS = ["https://memegenerator.net/Ordinary-Muslim-Man",
-         "https://memegenerator.net/Asian-College-Freshman",
-         "https://memegenerator.net/Sassy-Black-Woman",
-         "https://memegenerator.net/Scumbag-Catholic-Priest",
-         "https://memegenerator.net/Scumbag-Whitehouse",
-         "https://memegenerator.net/Scumbag-God",
-         "https://memegenerator.net/Scumbag-America",
-         "https://memegenerator.net/Angry-Muslim-Guy",
-         "https://memegenerator.net/Confused-Muslim-Girl",
-         "https://memegenerator.net/Stereotypical-Redneck",
-         "https://memegenerator.net/Stereotypical-Indian-Telemarketer"
-         ]
+LINKS = [
+    # Religion
+    "https://memegenerator.net/Advicejew",
+    "https://memegenerator.net/Confused-Muslim-Girl",
+    "https://memegenerator.net/Angry-Muslim-Guy",
+    "https://memegenerator.net/Scumbag-God",
+    "https://memegenerator.net/Ordinary-Muslim-Man",
+    "https://memegenerator.net/Scumbag-Catholic-Priest",
+
+    # Sexual Orientation
+    "https://memegenerator.net/Gay-Richard-Simmons",
+    "https://memegenerator.net/Chinese-Lesbians",
+    "https://memegenerator.net/Transvestite-Trevor",
+
+    # Race/Nationality
+    "https://memegenerator.net/Asian-College-Freshman",
+    "https://memegenerator.net/Sassy-Black-Woman",
+    "https://memegenerator.net/Scumbag-Whitehouse",
+    "https://memegenerator.net/Scumbag-America",
+    "https://memegenerator.net/Stereotypical-Redneck",
+    "https://memegenerator.net/Stereotypical-Indian-Telemarketer",
+    "https://memegenerator.net/Canada-Flag",
+
+    # Gender
+    "https://memegenerator.net/Pms-Woman",
+
+
+    ]
 
 
 def crawl_templates(page=1):

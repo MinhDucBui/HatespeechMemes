@@ -11,7 +11,17 @@ np.random.seed(42)
 
 LANGUAGES = ["de"]
 SIZE = 100
-
+CHOSEN_TEMPLATES = ["advice-hitler",
+                    "african-children-dancing",
+                    "american-pride-eagle",
+                    "angry-black-woman",
+                    "asinine-america",
+                    "obama",
+                    "obama laughing",
+                    "Rich Men Laughing",
+                    "scumbag-god",
+                    "Successful Mexican"]
+CHOSEN_TEMPLATES = [template.replace("-", " ").lower() for template in CHOSEN_TEMPLATES]
 
 def detect_lang(input_str):
     try:
@@ -37,8 +47,7 @@ if __name__ == '__main__':
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/memes')
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
-    # parser.add_argument('--save-dir', '-d', required=True, type=str,
-    #                    help='directory where the dataset should be stored')
+
     args = parser.parse_args()
 
     folder_path = args.memes
@@ -55,17 +64,24 @@ if __name__ == '__main__':
     df_original['template_normalized'] = df_original['template'].str.split('_variant=').str[0]
     TEMPLATES = df_original['template_normalized'].unique().tolist()
 
+    all_captions = []
     for template in TEMPLATES:
+        if CHOSEN_TEMPLATES and template.lower() not in CHOSEN_TEMPLATES:
+            continue
+        print(template)
         df_template = df_original[df_original["template_normalized"] == template].copy()
 
         # Filter for English Languages
         df = filter_english(df_template)
 
         # For now, randomly select:
-        df = df.sample(n=100)
+        desired_sample_size = 100
+        sample_size = min(len(df), desired_sample_size)
+        if sample_size != desired_sample_size:
+            print("Not Enough Samples for {}. Only {}.".format(template, sample_size))
+        df = df.sample(n=sample_size)
 
         # Save Selection
-        all_captions = []
         for index, row in df.iterrows():
             link = row["template"]
             instance_id = row["unique_id"]
@@ -74,14 +90,14 @@ if __name__ == '__main__':
             text_original = top + ' ' + "<sep>" + ' ' + bottom
             all_captions.append(f'{link}\t{instance_id}\t{text_original}\t{text_original}\n')
 
-        # Create Path
-        output_path = os.path.join(output_folder, "caption_translation")
-        if not os.path.exists(output_path):
-            os.makedirs(output_path)
-        output_language_file = os.path.join(output_path, "en.txt")
+    # Create Path
+    output_path = os.path.join(output_folder, "caption_translation")
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    output_language_file = os.path.join(output_path, "en.txt")
 
-        # Save into text file
-        with open(output_language_file, "w") as file:
-            # Iterate through the list and write each string to the file
-            for item in all_captions:
-                file.write(item)  # Adding a newline character after each string
+    # Save into text file
+    with open(output_language_file, "w") as file:
+        # Iterate through the list and write each string to the file
+        for item in all_captions:
+            file.write(item)  # Adding a newline character after each string

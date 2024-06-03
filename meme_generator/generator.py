@@ -10,10 +10,23 @@ from langdetect import detect
 
 LANGUAGES = ["en", "de"]
 
+def resize_image(filename, new_width, new_height):
+    # Open the image
+    img = Image.open(filename)
 
-def make_meme(topString, bottomString, filename, output_file, font_path="/Library/Fonts/Impact.ttf", font_size=20):
+    # Resize the image
+    resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+
+    return resized_img
+
+
+def make_meme(topString, bottomString, filename, output_file, font_path="/Library/Fonts/Impact.ttf", font_size=30):
     # Open the image and get its size
     img = Image.open(filename)
+    new_width = 600
+    new_height = 600
+
+    img = resize_image(filename, new_width, new_height)
     image_size = img.size
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype(font_path, font_size)

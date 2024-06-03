@@ -1,11 +1,42 @@
 import argparse
-from googletrans import Translator
+from google.cloud import translate_v3 as translate
+from google.oauth2 import service_account
 import pandas as pd
 import os
 from tqdm import tqdm
 
 LANGUAGES = ["de"]
 SIZE = 100
+
+# Set up Google Translate credentials
+project_id = 'fluted-karma-425309-j5'
+credentials_path = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/fluted-karma-425309-j5-5c8d7c25596f.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
+credentials = service_account.Credentials.from_service_account_file(
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'])
+project_id = credentials.project_id
+if project_id is None:
+    raise Exception(
+        "Could not determine the Google Cloud project ID from the service account key")
+CLIENT = translate.TranslationServiceClient(credentials=credentials)
+PARENT = f"projects/{project_id}/locations/global"
+
+
+def translate_text(target: str, text: str) -> dict:
+    response = CLIENT.translate_text(
+        contents=[text],
+        mime_type='text/plain',
+        source_language_code='en',
+        target_language_code=target,
+        parent=PARENT,
+    )
+
+    translation = response.translations[0]
+    result = {
+        "translatedText": translation.translated_text,
+    }
+    return result
 
 
 if __name__ == '__main__':
@@ -19,14 +50,12 @@ if __name__ == '__main__':
 
     output_folder = args.generate_folder
     memes_folder = args.memes
-    headers = ['template', 'instance_id', 'caption', 'caption_original']  # Replace with your actual column names
+    # Replace with your actual column names
+    headers = ['template', 'instance_id', 'caption', 'caption_original']
 
     # Load the text file into a DataFrame
     df_selection = pd.read_csv(os.path.join(output_folder, "caption_translation/en.txt"),
                                sep='\t', names=headers)
-
-    translator = Translator()
-
     for language in LANGUAGES:
         all_captions = []
         for index, row in tqdm(df_selection.iterrows()):
@@ -43,7 +72,7 @@ if __name__ == '__main__':
             SEPERATOR = " // "
             text = top + SEPERATOR + bottom
             if language != "en":
-                text = translator.translate(text, src='en', dest=language).text
+                text = translate_text(language, "testing translation")
 
             # Postprocessing of seperator
             # text = text.replace("<Schritt>", "<sep>")
@@ -54,16 +83,18 @@ if __name__ == '__main__':
                 top_trans = ""
                 bottom_trans = ""
                 if top != "":
-                    top_trans = translator.translate(top, src='en', dest="de").text
+                    top_trans = translate_text(language, top)["translatedText"]
                 if bottom != "":
-                    bottom_trans = translator.translate(bottom, src='en', dest="de").text
+                    bottom_trans = translate_text(language, bottom)[
+                        "translatedText"]
                 text = top_trans + ' ' + "<sep>" + ' ' + bottom_trans
             else:
                 text = text.replace(SEPERATOR, " <sep> ")
 
             link = row["template"]
             instance_id = row["instance_id"]
-            all_captions.append(f'{link}\t{instance_id}\t{text}\t{text_original}\n')
+            all_captions.append(
+                f'{link}\t{instance_id}\t{text}\t{text_original}\n')
 
         # Create Path
         output_path = os.path.join(output_folder, "caption_translation")
@@ -75,4 +106,5 @@ if __name__ == '__main__':
         with open(output_language_file, "w") as file:
             # Iterate through the list and write each string to the file
             for item in all_captions:
-                file.write(item)  # Adding a newline character after each string
+                # Adding a newline character after each string
+                file.write(item)
