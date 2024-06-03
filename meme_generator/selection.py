@@ -28,7 +28,6 @@ def filter_english(df):
     tqdm.pandas()
     df['en_detect'] = df['caption_modified'].progress_apply(detect_lang)
     df = df[df['en_detect'] == "en"]
-    #print("New Length: {}".format(len(df)))
     return df
 
 
