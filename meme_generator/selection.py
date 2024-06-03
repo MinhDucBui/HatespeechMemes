@@ -3,7 +3,7 @@ from googletrans import Translator
 import pandas as pd
 import os
 from tqdm import tqdm
-from langdetect import detect
+from langdetect import detect, LangDetectException
 import numpy as np
 
 # Set a random seed for reproducibility
@@ -13,14 +13,20 @@ LANGUAGES = ["de"]
 SIZE = 100
 
 
+def detect_lang(input_str):
+    try:
+        return detect(input_str)
+    except LangDetectException:
+        return "Error"
+
+
 def filter_english(df):
     df['caption_modified'] = df['caption'].str.replace('<sep>', '')
     df['caption_modified'] = df['caption_modified'].str.replace('<emp>', '')
     df['caption_modified'] = df['caption_modified'].str.replace('  ', ' ')
     df['caption_modified'] = df['caption_modified'].str.lower()
     tqdm.pandas()
-    df['en_detect'] = df['caption_modified'].progress_apply(detect)
-
+    df['en_detect'] = df['caption_modified'].progress_apply(detect_lang)
     df = df[df['en_detect'] == "en"]
     #print("New Length: {}".format(len(df)))
     return df

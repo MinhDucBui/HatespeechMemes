@@ -14,6 +14,18 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.by import By
 
 HTML_PATH = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/htmls"
+LINKS = ["https://memegenerator.net/Ordinary-Muslim-Man",
+         "https://memegenerator.net/Asian-College-Freshman",
+         "https://memegenerator.net/Sassy-Black-Woman",
+         "https://memegenerator.net/Scumbag-Catholic-Priest",
+         "https://memegenerator.net/Scumbag-Whitehouse",
+         "https://memegenerator.net/Scumbag-God",
+         "https://memegenerator.net/Scumbag-America",
+         "https://memegenerator.net/Angry-Muslim-Guy",
+         "https://memegenerator.net/Confused-Muslim-Girl",
+         "https://memegenerator.net/Stereotypical-Redneck",
+         "https://memegenerator.net/Stereotypical-Indian-Telemarketer"
+         ]
 
 
 def crawl_templates(page=1):
@@ -24,35 +36,9 @@ def crawl_templates(page=1):
     """
 
     meme_templates = []
-    links = [  # "https://memegenerator.net/Ordinary-Muslim-Man",]
-        # "https://memegenerator.net/Asian-College-Freshman"]
-        # "https://memegenerator.net/Sassy-Black-Woman",
-        # "https://memegenerator.net/Scumbag-Catholic-Priest"]
-        # "https://memegenerator.net/Scumbag-Whitehouse",
-        # "https://memegenerator.net/Scumbag-God",
-        # "https://memegenerator.net/Scumbag-America",
-        # "https://memegenerator.net/Angry-Muslim-Guy",
-        # "https://memegenerator.net/Confused-Muslim-Girl",
-        # "https://memegenerator.net/Stereotypical-Redneck",
-        "https://memegenerator.net/Stereotypical-Indian-Telemarketer"]
-    """
-    try:
-        r = requests.get(url)
-        tree = html.fromstring(r.content)
-        divs = tree.xpath('//div[@class="char-img"]/a')
 
-        for div in divs:
-            link = div.get('href')
-            img = div.find('img')
-            label = img.get('alt')
-            src = img.get('src')
-
-            meme_templates.append({'label': label, 'link': link, 'src': src})
-    except ConnectionError as e:
-        print(e)
-    """
     meme_templates = []
-    for link in links:
+    for link in LINKS:
         meme_templates.append({'link': link})
     return meme_templates
 
@@ -168,6 +154,7 @@ def crawl_template_page(temp):
         img_src = element.xpath('.//img/@src')[0]
         memes.append({"url": url, "instance_id": href_value,
                       "img_src": img_src, "text": text_string})
+
     print("Found memes: {}".format(len(memes)))
     return memes
 
@@ -286,6 +273,7 @@ class MemeGeneratorCrawler:
         memes = []
         for temp in templates:
             memes += crawl_template_page(temp)
+            print("For {}.\n".format(temp))
             time.sleep(0.3)
 
         # das
