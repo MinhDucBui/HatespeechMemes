@@ -58,7 +58,7 @@ if __name__ == '__main__':
                                sep='\t', names=headers)
     for language in LANGUAGES:
         all_captions = []
-        for index, row in tqdm(df_selection.iterrows()):
+        for index, row in tqdm(df_selection.iterrows(), total=len(df_selection)):
             # ToDo Check if already exists
 
             # Get Bottom & Top Strings
@@ -73,25 +73,8 @@ if __name__ == '__main__':
             # Google Translation
             SEPERATOR = " // "
             text = top + SEPERATOR + bottom
-            if language != "en":
-                text = translate_text(language, "testing translation")
-
-            # Postprocessing of seperator
-            # text = text.replace("<Schritt>", "<sep>")
-            # text = text.replace("<Sep>", "<sep>")
-            # text = text.replace("<step>", "<sep>")
-            if SEPERATOR not in text:
-                # Then have to translate top and bottom separately
-                top_trans = ""
-                bottom_trans = ""
-                if top != "":
-                    top_trans = translate_text(language, top)["translatedText"]
-                if bottom != "":
-                    bottom_trans = translate_text(language, bottom)[
-                        "translatedText"]
-                text = top_trans + ' ' + "<sep>" + ' ' + bottom_trans
-            else:
-                text = text.replace(SEPERATOR, " <sep> ")
+            text = translate_text(language, text)["translatedText"]
+            text = text.replace(SEPERATOR, " <sep> ")
 
             link = row["template"]
             instance_id = row["instance_id"]

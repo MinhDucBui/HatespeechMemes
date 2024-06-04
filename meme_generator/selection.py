@@ -1,5 +1,4 @@
 import argparse
-from googletrans import Translator
 import pandas as pd
 import os
 from tqdm import tqdm
@@ -47,17 +46,27 @@ if __name__ == '__main__':
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/memes')
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
+    parser.add_argument('--existing', '-e', type=str,
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
 
     args = parser.parse_args()
 
     folder_path = args.memes
     output_folder = args.generate_folder
+    existing = args.existing
     headers = ['template', 'instance_id', 'caption']  # Replace with your actual column names
 
     # Load the text file into a DataFrame
     df_original = pd.read_csv(os.path.join(folder_path, "captions.txt"), sep='\t', names=headers)
-    df_original['unique_id'] = range(1, len(df_original) + 1)
+    # If existing, add this:
+    if existing:
+        df_original['unique_id'] = range(1, len(df_original) + 1)
+    else:
+        df_original['unique_id'] = df_original["template_id"]
     df_original = df_original.drop_duplicates()
+
+    # ToDo: meme_generator
+    # Clean the text file from odd number of '""
 
     df_original['template_normalized'] = df_original['template'].str.split('_variant=').str[0]
     TEMPLATES = df_original['template_normalized'].unique().tolist()
@@ -73,7 +82,7 @@ if __name__ == '__main__':
         df = filter_english(df_template)
 
         # For now, randomly select:
-        desired_sample_size = 100
+        desired_sample_size = 300
         sample_size = min(len(df), desired_sample_size)
         if sample_size != desired_sample_size:
             print("Not Enough Samples for {}. Only {}.".format(template, sample_size))
