@@ -59,8 +59,6 @@ if __name__ == '__main__':
     df_original['unique_id'] = range(1, len(df_original) + 1)
     df_original = df_original.drop_duplicates()
 
-    translator = Translator()
-
     df_original['template_normalized'] = df_original['template'].str.split('_variant=').str[0]
     TEMPLATES = df_original['template_normalized'].unique().tolist()
 

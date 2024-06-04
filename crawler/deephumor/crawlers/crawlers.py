@@ -37,9 +37,19 @@ LINKS = [
     "https://memegenerator.net/Stereotypical-Indian-Telemarketer",
     "https://memegenerator.net/Canada-Flag",
 
+    # Socio
+    "https://memegenerator.net/Homeless-Man-2",
+
     # Gender
     "https://memegenerator.net/Pms-Woman",
 
+    # Politics
+    "https://memegenerator.net/Feminist-Cunt",
+    "https://memegenerator.net/Feministfrequently",
+
+    # Body Type
+    "https://memegenerator.net/Skinny-Kid",
+    "https://memegenerator.net/Fat-Girl",
 
     ]
 

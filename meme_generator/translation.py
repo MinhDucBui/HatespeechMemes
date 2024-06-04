@@ -59,6 +59,8 @@ if __name__ == '__main__':
     for language in LANGUAGES:
         all_captions = []
         for index, row in tqdm(df_selection.iterrows()):
+            # ToDo Check if already exists
+
             # Get Bottom & Top Strings
             try:
                 top = row["caption"].split("<sep>")[0].strip()
