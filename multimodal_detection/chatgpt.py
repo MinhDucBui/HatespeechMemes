@@ -4,6 +4,7 @@ from tqdm import tqdm
 import argparse
 import os
 import tiktoken
+import json
 
 
 API_KEY = os.getenv("OPENAI_API_KEY")
@@ -21,7 +22,7 @@ def prompt_prefix(multimodal_setting):
 
     if multimodal_setting:
         message = message + [{"role": "user",
-                              "content": f"Classify the following image with text into 'hatespeech' or 'no hatespeech'. "
+                              "content": f"Classify the following meme into 'hatespeech' or 'no hatespeech'. "
                               f"The definition of hatespeech is: {HATESPEECH_DEFINITION}\n"
                               "Reason and then Answer with 'Yes' or 'No'. Format is 'Reason: <Your Reasoning>\nAnswer: <Yes or No>'.\n"}
                              ]
@@ -36,81 +37,105 @@ def prompt_prefix(multimodal_setting):
 
 
 def image_description(template):
-    template = template.replace("-", " ").lower()
+    template = template.replace("-", " ").lower().strip()
     if template == "scumbag america":
-        description = "Image: Depicts the head of god, with a hat on from the meme 'scumbag steve'."
-
-    elif template == "scumbag catholic priest":
-        description = "Image: Depicts a catholic priest."
-
-    elif template == "confused muslim girl":
-        description = "Image: Depicts a confused muslim girl with a headscarf."
-
-    elif template == "angry muslim guy":
-        description = "Image: Depicts an angry muslim."
-
-    elif template == "advicejew":
-        description = "Image: Depicts a jew with israelin flag."
-
-    elif template == "ordinary muslim man":
-        description = "Image: Depicts a muslim."
-
-    elif template == "stereotypical indian telemarketer":
-        description = "Image: A female indian wearing a headset."
-
-    elif template == "generic indian guy":
-        description = "Image: Depicts a male indian."
-
-    elif template == "african children dancing":
-        description = "Image: Depicts young black childen dancing with little clothing."
-
-    elif template == "american pride eagle":
-        description = "Image: Depicts an eagle with american flag in the background."
-
-    elif template == "successful mexican":
-        description = "Image: Depicts a mexican with a big sombrero."
-
-    elif template == "provincial man":
-        description = "Image: Depicts a bald (provincial) man with thick, close-set eyebrows, a broad smile, and a mustache."
+        description = "Meme Image: Depicts america, with a hat on from the meme 'scumbag steve'."
 
     elif template == "advice hitler":
-        description = "Image: Depicts hitler."
+        description = "Meme Image: Depicts hitler."
+
+    elif template == "angry black woman":
+        description = "Meme Image: Depicts a black woman."
+
+    elif template == "scumbag america":
+        description = "Meme Image: Depicts america, with a hat on from the meme 'scumbag steve'."
+
+    elif template == "scumbag america":
+        description = "Meme Image: Depicts america, with a hat on from the meme 'scumbag steve'."
+
+    elif template == "scumbag america":
+        description = "Meme Image: Depicts america, with a hat on from the meme 'scumbag steve'."
+
+    elif template == "scumbag catholic priest":
+        description = "Meme Image: Depicts a catholic priest."
+
+    elif template == "confused muslim girl":
+        description = "Meme Image: Depicts a confused muslim girl with a headscarf."
+
+    elif template == "angry muslim guy":
+        description = "Meme Image: Depicts an angry muslim."
+
+    elif template == "advicejew":
+        description = "Meme Image: Depicts a jew with israelin flag."
+
+    elif template == "ordinary muslim man":
+        description = "Meme Image: Depicts a muslim."
+
+    elif template == "stereotypical indian telemarketer":
+        description = "Meme Image: A female indian wearing a headset."
+
+    elif template == "generic indian guy":
+        description = "Meme Image: Depicts a male indian."
+
+    elif template == "african children dancing":
+        description = "Meme Image: Depicts young black childen dancing with little clothing."
+
+    elif template == "american pride eagle":
+        description = "Meme Image: Depicts an eagle with american flag in the background."
+
+    elif template == "successful mexican":
+        description = "Meme Image: Depicts a mexican with a big sombrero."
+
+    elif template == "provincial man":
+        description = "Meme Image: Depicts a bald (provincial) man with thick, close-set eyebrows, a broad smile, and a mustache."
+
+    elif template == "advice hitler":
+        description = "Meme Image: Depicts hitler."
 
     elif template == "feministfrequently":
-        description = "Image: Depicts an angry woman."
+        description = "Meme Image: Depicts an angry woman."
 
     elif template == "feminist cunt":
-        description = "Image: Depicts a woman with a tshirt referencing feminism."
+        description = "Meme Image: Depicts a woman with a tshirt referencing feminism."
 
     elif template == "liberal douche garofalo":
-        description = "Image: Depicts Garofalo, who is a liberal."
+        description = "Meme Image: Depicts Garofalo, who is a liberal."
 
     elif template == "pms woman":
-        description = "Image: Depicts a 50s cartoon woman."
+        description = "Meme Image: Depicts a 50s cartoon woman."
 
     elif template == "skinny kid":
-        description = "Image: Depicts a skinny looking asian kid."
+        description = "Meme Image: Depicts a skinny looking asian kid."
 
     elif template == "fat girl":
-        description = "Image: Depicts an overweight girl."
+        description = "Meme Image: Depicts an overweight girl."
 
     elif template == "fat girl":
-        description = "Image: Depicts an overweight girl."
+        description = "Meme Image: Depicts an overweight girl."
+
+    elif template == "obama":
+        description = "Meme Image: Depicts obama."
+
+    elif template == "obama laughing":
+        description = "Meme Image: Depicts obam laughing."
+
+    elif template == "laughing girls":
+        description = "Meme Image: Depicts two white blonde females laughing."
 
     elif template == "asian college freshman":
-        description = "Image: Depicts an asian in college."
+        description = "Meme Image: Depicts an asian in college."
 
     elif template == "scumbag whitehouse":
-        description = "Image: Depicts the whitehouse with a cap on."
+        description = "Meme Image: Depicts the whitehouse with a cap on."
 
     elif template == "stereotypical redneck":
-        description = "Image: Depicts a white person leaning on a truck (supposed to depict a 'redneck')."
+        description = "Meme Image: Depicts a white person leaning on a truck (supposed to depict a 'redneck')."
 
     elif template == "canada flag":
-        description = "Image: Depicts the canadian flag."
+        description = "Meme Image: Depicts the canadian flag."
 
     elif template == "canada flag":
-        description = "Image: Depicts the canadian flag."
+        description = "Meme Image: Depicts the canadian flag."
 
     else:
         raise ValueError(f"No Image Description for {template}.")
@@ -157,6 +182,38 @@ def save_results(df, answers, save_folder):
                   index=False)
 
 
+def save_into_jsonl(all_prompts, filtered_df, batch_size=800, prefix=""):
+    # Define the number of prompts per batch
+    prompts_per_batch = batch_size
+
+    # Divide the prompts into batches
+    prompt_batches = [all_prompts[i:i + prompts_per_batch]
+                      for i in range(0, len(all_prompts), prompts_per_batch)]
+
+    # Iterate over each batch and create a JSONL file
+    for batch_index, batch in enumerate(prompt_batches):
+        # Define the file name for the batch
+        jsonl_file = f"{prefix}_batch_{batch_index}.jsonl"
+
+        # Open the file in write mode
+        with open(jsonl_file, "w") as f:
+            # Iterate over each prompt in the batch and write to the JSONL file
+            for index, prompt in enumerate(batch):
+                custom_id = str(filtered_df[index]["instance_id"])
+                json_row = {
+                    "custom_id": custom_id,
+                    "method": "POST",
+                    "url": "/v1/chat/completions",
+                    "body": {
+                        "model": "gpt-3.5-turbo-0125",
+                        "messages": prompt,
+                        "max_tokens": 1000
+                    }
+                }
+                # Write the JSON object to the file with a newline character
+                f.write(json.dumps(json_row) + "\n")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
     parser.add_argument('--captions_path', '-c', type=str,
@@ -190,7 +247,9 @@ if __name__ == '__main__':
                 or template == "gay richard simmons" \
                 or template == "sassy black woman" \
                 or template == "chinese lesbians" \
-                or template == "homeless man 2":
+                or template == "homeless man 2" \
+                or template == "asinine america" \
+                or template == "rich men laughing":
             continue
         message = prompt_prefix(multimodal_setting)
         text = row["caption"]
@@ -214,12 +273,31 @@ if __name__ == '__main__':
     save_answers = []
     saving_iter = 100
 
+    if multimodal_setting:
+        save_into_jsonl(all_prompts, filtered_df, prefix="multimodal")
+    else:
+        save_into_jsonl(all_prompts, filtered_df, prefix="text")
+
+    filtered_df = pd.DataFrame(filtered_df)
     # Path
-    # path_existing = os.path.exists(os.path.join(save_folder, "multimodal_detection"))
-    # if os.path.exists(os.path.join(save_folder, "multimodal_detection")):
+    path_existing = os.path.join(save_folder, "multimodal_detection")
+    if multimodal_setting:
+        path_existing = os.path.join(path_existing, 'multimodal_detection.csv')
+    else:
+        path_existing = os.path.join(path_existing, 'text_detection.csv')
+    if os.path.isfile(path_existing):
+        df_existing = pd.read_csv(path_existing)
+        save_answers = list(df_existing["prediction"])
+        existing_ids = list(df_existing["instance_id"])
+    else:
+        existing_ids = []
+
     for index, prompt in tqdm(enumerate(all_prompts), total=len(all_prompts)):
-        if index % saving_iter == 0:
-            subset_df = df[:index].copy()
+        if existing_ids and filtered_df.iloc[index]["instance_id"] in existing_ids:
+            continue
+
+        if index % saving_iter == 0 and index != 0:
+            subset_df = filtered_df[:index].copy()
             save_results(subset_df, save_answers, save_folder)
 
         try:
@@ -227,12 +305,6 @@ if __name__ == '__main__':
                 model=MODEL_NAME,
                 messages=prompt,
                 temperature=0,
-            )
-
-            # Construct the current prompt string
-            current_prompt_str = "\n".join(
-                "{}: {}".format(instance["role"], instance["content"])
-                for instance in prompt
             )
 
             # save_prompt.append(current_prompt_str)  # Uncomment if needed

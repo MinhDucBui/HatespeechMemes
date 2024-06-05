@@ -2,7 +2,7 @@ import pandas as pd
 import argparse
 import os
 
-CUTOFF = 1000
+CUTOFF = 3200
 
 
 def extract_binary_pred(df):
@@ -25,11 +25,19 @@ def multimodal_examples(text_df, multimodal_df):
                           axis=1,
                           keys=["total_1s", "total_samples_text", "total_samples_multimodal"])
     print(result_df)
+    print(len(result_df))
+    new_df = pd.DataFrame([], columns=["instance_id", "processed_template",
+                                       "caption",
+                                       "pred_text", "pred_multimodal",
+                                       "difference"])
+    NUM_EXAMPLE = 1
     for template in list(set(list(text_df["processed_template"]))):
-        filtered_rows = text_df[(text_df["processed_template"] == template) & index].iloc[:5]
+        filtered_rows = text_df[(
+            text_df["processed_template"] == template) & index].iloc[:NUM_EXAMPLE]
         examples = list(filtered_rows["caption"])
         preds_text = list(filtered_rows["prediction"])
-        filtered_rows = multimodal_df[(multimodal_df["processed_template"] == template) & index].iloc[:5]
+        filtered_rows = multimodal_df[(
+            multimodal_df["processed_template"] == template) & index].iloc[:NUM_EXAMPLE]
         preds_multimodal = list(filtered_rows["prediction"])
         print(f"\n\n------{template}------")
         for example, pred_text, pred_multimodal in zip(examples, preds_text, preds_multimodal):
@@ -37,6 +45,16 @@ def multimodal_examples(text_df, multimodal_df):
             print(example)
             print(pred_text)
             print(pred_multimodal)
+
+    new_df["instance_id"] = text_df["instance_id"]
+    new_df["caption"] = text_df["caption"]
+    new_df["processed_template"] = text_df["processed_template"]
+    new_df["pred_text"] = text_df["prediction"]
+    new_df["pred_multimodal"] = multimodal_df["prediction"]
+    new_df["difference"] = index
+
+    # Save as excel file
+    new_df.to_excel('sample.xlsx', index=False)
 
 
 if __name__ == '__main__':
