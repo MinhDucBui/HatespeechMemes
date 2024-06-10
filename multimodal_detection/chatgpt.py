@@ -273,10 +273,10 @@ if __name__ == '__main__':
     save_answers = []
     saving_iter = 100
 
-    if multimodal_setting:
-        save_into_jsonl(all_prompts, filtered_df, prefix="multimodal")
-    else:
-        save_into_jsonl(all_prompts, filtered_df, prefix="text")
+    # if multimodal_setting:
+    #    save_into_jsonl(all_prompts, filtered_df, prefix="multimodal")
+    # else:
+    #    save_into_jsonl(all_prompts, filtered_df, prefix="text")
 
     filtered_df = pd.DataFrame(filtered_df)
     # Path
@@ -295,7 +295,7 @@ if __name__ == '__main__':
     for index, prompt in tqdm(enumerate(all_prompts), total=len(all_prompts)):
         if existing_ids and filtered_df.iloc[index]["instance_id"] in existing_ids:
             continue
-
+        # print(filtered_df.iloc[index]["template"])
         if index % saving_iter == 0 and index != 0:
             subset_df = filtered_df[:index].copy()
             save_results(subset_df, save_answers, save_folder)
@@ -312,3 +312,5 @@ if __name__ == '__main__':
         except Exception as e:
             print(f"Error occurred: {e}")
             save_answers.append("")
+    subset_df = filtered_df.copy()
+    save_results(subset_df, save_answers, save_folder)

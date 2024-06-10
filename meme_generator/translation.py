@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 LANGUAGES = ["de"]
 SIZE = 100
+SEPERATOR = " // "
 
 # Set up Google Translate credentials
 project_id = 'fluted-karma-425309-j5'
@@ -39,6 +40,20 @@ def translate_text(target: str, text: str) -> dict:
     return result
 
 
+def translate_text_batch(target: str, texts: str) -> dict:
+    response = CLIENT.translate_text(
+        contents=texts,
+        mime_type='text/plain',
+        source_language_code='en',
+        target_language_code=target,
+        parent=PARENT,
+    )
+
+    results = [
+        translation.translated_text for translation in response.translations]
+    return results
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
     parser.add_argument('--generate_folder', '-g', type=str,
@@ -58,28 +73,49 @@ if __name__ == '__main__':
                                sep='\t', names=headers)
     for language in LANGUAGES:
         all_captions = []
-        for index, row in tqdm(df_selection.iterrows(), total=len(df_selection)):
-            # ToDo Check if already exists
 
-            # Get Bottom & Top Strings
-            try:
-                top = row["caption"].split("<sep>")[0].strip()
-                bottom = row["caption"].split("<sep>")[1].strip()
-                text_original = top + ' ' + "<sep>" + ' ' + bottom
-            except IndexError as e:
-                print("Error:", e)
-                print("Error: Caption format incorrect for {}".format(index))
+        # Define the batch size
+        batch_size = 250
 
-            # Google Translation
-            SEPERATOR = " // "
-            text = top + SEPERATOR + bottom
-            text = translate_text(language, text)["translatedText"]
-            text = text.replace(SEPERATOR, " <sep> ")
+        # Iterate through the DataFrame in batches
+        for start in tqdm(range(0, len(df_selection), batch_size), total=(len(df_selection) // batch_size + 1)):
+            # Define the end of the current batch
+            end = min(start + batch_size, len(df_selection))
 
-            link = row["template"]
-            instance_id = row["instance_id"]
-            all_captions.append(
-                f'{link}\t{instance_id}\t{text}\t{text_original}\n')
+            # Slice the DataFrame to get the current batch
+            batch = df_selection.iloc[start:end]
+            captions_original = list(batch['caption'])
+            captions = [caption.replace(
+                ' <sep> ', SEPERATOR) for caption in captions_original]
+            translations = translate_text_batch(language, captions)
+            for trans_index, translation in enumerate(translations):
+                try:
+                    top = captions_original[trans_index].split("<sep>")[
+                        0].strip()
+                    bottom = captions_original[trans_index].split("<sep>")[
+                        1].strip()
+                except IndexError as e:
+                    print("Error:", e)
+                    print("Error: Caption format incorrect for {}".format(
+                        start+trans_index))
+                if SEPERATOR not in translation:
+                    top_trans = ""
+                    bottom_trans = ""
+                    if top != "":
+                        top_trans = translate_text(language, top)[
+                            "translatedText"]
+                    if bottom != "":
+                        bottom_trans = translate_text(language, bottom)[
+                            "translatedText"]
+                    text = top_trans + ' ' + "<sep>" + ' ' + bottom_trans
+                else:
+                    text = translation.replace(SEPERATOR, " <sep> ")
+
+                link = batch["template"].iloc[trans_index]
+                instance_id = batch["instance_id"].iloc[trans_index]
+                text_original = batch["caption"].iloc[trans_index]
+                all_captions.append(
+                    f'{link}\t{instance_id}\t{text}\t{text_original}\n')
 
         # Create Path
         output_path = os.path.join(output_folder, "caption_translation")

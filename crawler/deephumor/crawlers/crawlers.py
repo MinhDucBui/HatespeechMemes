@@ -23,6 +23,16 @@ LINKS = [
     "https://memegenerator.net/Ordinary-Muslim-Man",
     "https://memegenerator.net/Scumbag-Catholic-Priest",
 
+    "https://memegenerator.net/Condescending-Christian",
+    "https://memegenerator.net/Asshole-Christian-Missionary",
+    "https://memegenerator.net/Typical-Atheist",
+    "https://memegenerator.net/Uncontested-Atheist",
+    "https://memegenerator.net/Buddha",
+    "https://memegenerator.net/Buddhadawg",
+    #"https://memegenerator.net/Buddha-Moodu",
+    #"https://memegenerator.net/Hmm-Buddha",
+
+
     # Sexual Orientation
     "https://memegenerator.net/Gay-Richard-Simmons",
     "https://memegenerator.net/Chinese-Lesbians",
@@ -36,12 +46,32 @@ LINKS = [
     "https://memegenerator.net/Stereotypical-Redneck",
     "https://memegenerator.net/Stereotypical-Indian-Telemarketer",
     "https://memegenerator.net/Canada-Flag",
+    "https://memegenerator.net/Average-Italian-Driver",
+    "https://memegenerator.net/Average-Italian-Criminal",
+    "https://memegenerator.net/Success-Germany",
+    "https://memegenerator.net/Germany-Pls",
+
+    "https://memegenerator.net/Typical-Germany-Lover",
+    "https://memegenerator.net/Average-Italian-Guy-Official",
+    "https://memegenerator.net/Frenchy",
+    "https://memegenerator.net/Scumbag-French",
+    "https://memegenerator.net/Stereotypical-French-Man",
+    "https://memegenerator.net/Advice-Kpop-Fangirl",
+    "https://memegenerator.net/American-Pride-Eagle",
+
 
     # Socio
     "https://memegenerator.net/Homeless-Man-2",
 
     # Gender
     "https://memegenerator.net/Pms-Woman",
+    "https://memegenerator.net/3-Lesbians-Showing-And-Fingering-Their-Ass",
+    "https://memegenerator.net/Lesbian-Scissor",
+    "https://memegenerator.net/Chinese-Lesbians",
+    "https://memegenerator.net/Gay-Pornstar-Logic",
+    "https://memegenerator.net/Gay-Pride-Queer",
+    "https://memegenerator.net/Oppressive-Trans-Bro",
+    "https://memegenerator.net/Transvestite-Trevor",
 
     # Politics
     "https://memegenerator.net/Feminist-Cunt",
@@ -310,6 +340,10 @@ class MemeGeneratorCrawler:
             instance_id = meme["instance_id"]
             src = meme["img_src"]
             captions = meme["text"]
+
+            if src == "/img/empty.png":
+                continue
+
             image_path = load_image(label_name, src, images_dir)
 
             # save captions
