@@ -29,8 +29,6 @@ LINKS = [
     "https://memegenerator.net/Uncontested-Atheist",
     "https://memegenerator.net/Buddha",
     "https://memegenerator.net/Buddhadawg",
-    #"https://memegenerator.net/Buddha-Moodu",
-    #"https://memegenerator.net/Hmm-Buddha",
 
 
     # Sexual Orientation
@@ -57,8 +55,10 @@ LINKS = [
     "https://memegenerator.net/Scumbag-French",
     "https://memegenerator.net/Stereotypical-French-Man",
     "https://memegenerator.net/Advice-Kpop-Fangirl",
-    "https://memegenerator.net/American-Pride-Eagle",
+    #"https://memegenerator.net/American-Pride-Eagle",
 
+    "https://memegenerator.net/Good-Chinese-Student",
+    "https://memegenerator.net/Stern-But-Honest-Chinese-Guy",
 
     # Socio
     "https://memegenerator.net/Homeless-Man-2",

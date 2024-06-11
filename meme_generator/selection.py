@@ -10,26 +10,46 @@ np.random.seed(42)
 
 LANGUAGES = ["de"]
 SIZE = 100
-CHOSEN_TEMPLATES = ["advice-hitler",
-                    "african-children-dancing",
-                    "american-pride-eagle",
-                    "angry-black-woman",
-                    "asinine-america",
-                    "obama",
-                    "obama laughing",
-                    "Rich Men Laughing",
-                    "scumbag-god",
-                    "Successful Mexican"]
+CHOSEN_TEMPLATES = ["Scumbag-Catholic-Priest",
+                    "asian college freshman",
+                    "Generic indian guy",
+                    #"Provincial man",
+                    "Sassy Black Woman",
+                    "Condescending-Christian",
+                    "Asshole-Christian-Missionary",
+                    "Angry Muslim Guy",
+                    "Typical-Atheist"
+                    "Uncontested-Atheist",
+                    "Buddha",
+                    "Buddhadawg",
+                    "Advicejew",
+                    "Typical-Germany-Lover",
+                    "Germany-Pls",
+                    "Success-Germany",
+                    "stereotypical-Redneck",
+                    "Redneck",
+                    "Average-Italian-Guy-Official",
+                    "Average-Italian-Driver",
+                    "Frenchy",
+                    "Scumbag-French",
+                    "Stereotypical-French-Man",
+                    "Succesful Mexican",
+                    "Stern-But-Honest-Chinese-Guy",
+                    "Good-Chinese-Student",
+                    "Lesbian-Scissor",
+                    "Chinese-Lesbians",
+                    "Gay-Pornstar-Logic",
+                    "Gay-Pride-Queer",
+                    "Gay-Richard-Simmons",
+                    "Transvestite-Trevor",
+                    "Oppressive-Trans-Bro"
+                    ]
 
-CHOSEN_TEMPLATES = ["american pride eagle",
-                    "laughing girls",
-                    "african children dancing",
-                    "provincial man",
-                    "obama laughing"]
 
-CHOSEN_TEMPLATES = [template.replace("-", " ").lower()
+print("Number of Templates: {}".format(len(CHOSEN_TEMPLATES)))
+
+CHOSEN_TEMPLATES = [template.replace("-", " ").lower().strip()
                     for template in CHOSEN_TEMPLATES]
-
 
 def detect_lang(input_str):
     try:
@@ -103,11 +123,11 @@ if __name__ == '__main__':
     folder_path = args.memes
     output_folder = args.generate_folder
 
-    if "existing" in output_folder:
+    if "900k" in folder_path:
         existing = args.generate_folder
     else:
         existing = None
-        CHOSEN_TEMPLATES = None
+        #CHOSEN_TEMPLATES = None
 
     # Output Path
     output_path = os.path.join(output_folder, "caption_translation")
@@ -123,7 +143,7 @@ if __name__ == '__main__':
 
     # If existing, add this:
     if existing:
-        df_original['unique_id'] = range(1, len(df_original) + 1)
+        df_original['unique_id'] = range(-1, -len(df_original) - 1, -1)
     else:
         df_original['unique_id'] = df_original["instance_id"].astype(int)
     df_original = df_original.drop_duplicates()
@@ -134,7 +154,6 @@ if __name__ == '__main__':
     df_original['template_normalized'] = df_original['template'].str.split(
         '_variant=').str[0]
     TEMPLATES = df_original['template_normalized'].unique().tolist()
-
     # Check wether file already exists, if yes, append to it
     if os.path.isfile(output_language_file):
         df_existing = pd.read_csv(os.path.join(output_folder,
@@ -146,10 +165,13 @@ if __name__ == '__main__':
             common_rows['unique_id'])]
 
     all_captions = []
+    count_template = 0
+    count_captions = 0
     for template in TEMPLATES:
-        if CHOSEN_TEMPLATES and template.lower().strip() not in CHOSEN_TEMPLATES:
+        template_check = template.replace("-", " ").lower().strip()
+        if CHOSEN_TEMPLATES and template_check not in CHOSEN_TEMPLATES:
             continue
-        print(f"Processing {template}")
+        print(f"\n------Processing {template}-------")
 
         df_template = df_original[df_original["template_normalized"] == template].copy(
         )
@@ -158,12 +180,10 @@ if __name__ == '__main__':
         df = filter_english(df_template)
 
         # Deduplicate
-        print(len(df))
         df = df.drop_duplicates(subset='caption')
-        print(len(df))
 
         # For now, randomly select:
-        desired_sample_size = 300
+        desired_sample_size = 600
         sample_size = min(len(df), desired_sample_size)
         if sample_size != desired_sample_size:
             print("Not Enough Samples for {}. Only {}.".format(
@@ -172,6 +192,9 @@ if __name__ == '__main__':
 
         results = collect_results(df)
         all_captions += results
+        count_template += 1
+
+    print(f"Processed {count_template} Templates")
 
     if os.path.isfile(output_language_file):
         # Append to the text file
