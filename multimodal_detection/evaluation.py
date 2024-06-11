@@ -81,6 +81,10 @@ if __name__ == '__main__':
     multimodal_folder = args.multimodal_folder
     text_df = pd.read_csv(os.path.join(
         multimodal_folder, "text_detection.csv"))
+
+    for i in range(10):
+        print(text_df["prediction"].iloc[i])
+    das
     multimodal_df = pd.read_csv(os.path.join(
         multimodal_folder, "multimodal_detection.csv"))
 

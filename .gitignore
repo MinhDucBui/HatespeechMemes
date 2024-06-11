@@ -5,6 +5,7 @@ multimodal_detection/api_key.py
 generate_memes.sh
 generate_memes_existing.sh
 final_dataset/
+model/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
