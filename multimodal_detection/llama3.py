@@ -17,25 +17,25 @@ MODEL_FOLDER_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--mis
 MODEL_FOLDER_PATH = "/lustre/project/ki-topml/mcascino/models"
 MODEL_NAME = "models--meta-llama--Meta-Llama-3-70B-Instruct"
 
-HATESPEECH_DEFINITION = "A direct or indirect attack on people based on characteristics, including ethnicity, race, nationality, immigration status, religion, caste, sex, gender identity, sexual orientation, and disability or disease. We define attack as violent or dehumanizing (comparing people to non-human things, e.g. animals) speech, statements of inferiority, and calls for exclusion or segregation. Mocking hate crime is also considered hate speech."
+HATESPEECH_DEFINITION = "A direct or indirect attack on people based on characteristics, including ethnicity, race, nationality, immigration status, religion, caste, sex, gender identity, sexual orientation, and disability or disease. We define attack as violent or dehumanizing (comparing people to non-human things, e.g. animals) speech, statements of inferiority, and calls for exclusion or segregation. Humor does not exempt one from hate speech. Mocking hate crime is also considered hate speech."
 
 
 def prompt_prefix(multimodal_path):
     message = [
-        {"role": "system", "content": "You are a helpful assistant who follows the following pattern."},
+        {"role": "system", "content": "You are a sensitive hatespeech classifier."},
     ]
 
     if multimodal_path:
         message = message + [{"role": "user",
                               "content": f"Classify the following meme into 'hatespeech' or 'no hatespeech'. "
-                              f"The definition of hatespeech is: {HATESPEECH_DEFINITION}\n"
-                              "Reason and then Answer with 'Yes' or 'No'. Format is 'Reason: <Your Reasoning>\nAnswer: <Yes or No>'.\n"}
+                              f"The definition of hatespeech is: {HATESPEECH_DEFINITION}"
+                              "Be culturally aware and sensitive. Answer with 'Yes' or 'No'.\n"}
                              ]
     else:
         message = message + [{"role": "user",
                               "content": f"Classify the following text into 'hatespeech' or 'no hatespeech'. "
-                              f"The definition of hatespeech is: {HATESPEECH_DEFINITION}\n"
-                              "Reason and then Answer with 'Yes' or 'No'. Format is 'Reason: <Your Reasoning>\nAnswer: <Yes or No>'.\n"}
+                              f"The definition of hatespeech is: {HATESPEECH_DEFINITION}"
+                              "Be culturally aware and sensitive. Answer with 'Yes' or 'No'.\n"}
                              ]
 
     return message
@@ -49,7 +49,6 @@ def image_description(template, descriptions):
     else:
         print(f"No Image Description for {template}.")
         description = ""
-        #raise ValueError(f"No Image Description for {template}.")
     return description
 
 
@@ -163,21 +162,12 @@ if __name__ == '__main__':
 
     for index_dev, (_, row) in enumerate(df.iterrows()):
         template = row["template"].split("_")[0].replace("-", " ").lower()
-        #if template == "transvestite trevor" \
-        #        or template == "scumbag god" \
-        #        or template == "gay richard simmons" \
-        #        or template == "sassy black woman" \
-        #        or template == "chinese lesbians" \
-        #        or template == "homeless man 2" \
-        #        or template == "asinine america" \
-        #        or template == "rich men laughing":
-        #    continue
         message = prompt_prefix(multimodal_path)
         text = row["caption"]
         text = text.replace("<sep>", "-")
         if multimodal_path:
             description = image_description(template, descriptions)
-            message[-1]["content"] = message[-1]["content"] + description
+            message[-1]["content"] = message[-1]["content"] + "Meme Image: " + description
 
         message[-1]["content"] = message[-1]["content"] + " Text: " + text
         all_prompts.append(message)
@@ -229,7 +219,7 @@ if __name__ == '__main__':
         existing_ids = []
 
     batch_size = 16  # Adjust this number based on your memory constraints and requirements
-    saving_iter = 160
+    saving_iter = int(batch_size * 10)
     for i in tqdm(range(0, tokenized['input_ids'].size(0), batch_size)):
         batch = {key: value[i:i+batch_size] for key, value in tokenized.items()}
         batch_answers = batch_inference(model, tokenizer, batch)
