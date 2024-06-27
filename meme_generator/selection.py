@@ -10,42 +10,108 @@ np.random.seed(42)
 
 LANGUAGES = ["de"]
 SIZE = 100
+MAX_CHAR_LENGTH = 100
+desired_sample_size = 1200
+
 CHOSEN_TEMPLATES = ["Scumbag-Catholic-Priest",
-                    "asian college freshman",
-                    "Generic indian guy",
-                    #"Provincial man",
-                    "Sassy Black Woman",
                     "Condescending-Christian",
-                    "Asshole-Christian-Missionary",
+                    "Jesus-Christ",
+
+                    # Islam
                     "Angry Muslim Guy",
-                    "Typical-Atheist"
-                    "Uncontested-Atheist",
-                    "Buddha",
-                    "Buddhadawg",
+                    "Ordinary-Muslim-Man",
+                    "Confused-Muslim-Girl",
+
+                    # Judaism
                     "Advicejew",
+                    "jewish-dude",
+                    "like-a-jew",
+
+                    # Germany
                     "Typical-Germany-Lover",
                     "Germany-Pls",
                     "Success-Germany",
-                    "stereotypical-Redneck",
-                    "Redneck",
-                    "Average-Italian-Guy-Official",
-                    "Average-Italian-Driver",
-                    "Frenchy",
-                    "Scumbag-French",
-                    "Stereotypical-French-Man",
-                    "Succesful Mexican",
+
+                    # USA
+                    "American Pride Eagle",
+                    "American-Flag-Shotgun-Guy",
+                    "Obese-American",
+
+                    # Mexico
+                    "Successful Mexican",
+                    "Mexicanotriste",
+                    "Mexicans-On-A-Truck",
+
+                    # China
                     "Stern-But-Honest-Chinese-Guy",
                     "Good-Chinese-Student",
+                    "Nia-China",
+
+                    # India
+                    "Generic Indian guy",
+                    "Indian-Father",
+                    "Stereotypical-Indian-Telemarketer",
+
+                    # Ethnicity
+                    # "Provincial man",
+                    # "Sassy Black Woman",
+                    # "Native-American",
+
+                    # Asian
+                    "Asian-College-Freshman",
+                    "Bad-Advice-Asian",
+                    "Troll-Asian",
+
+                    # Black
+                    "Sassy Black Woman",
+                    "Black Kid",
+                    "Skeptical-Black-Kid",
+
+                    # Middle Eastern
+                    "Y-U-So-Arab",
+                    "Arabic-Meme",
+                    "Richarabclap",
+
+                    # White
+                    "Ignorant-White-Girl",
+                    "Nice-White-Girl",
+                    "White-Power-Problems",
+
+                    # Race diversity
+                    "Slavery",
+                    "Privilege-Abusing-White-Couple",
+                    "Privilege-Denying-Dude",
+
+                    # Immigration
+                    "Muslim-Immigrant",
+
+                    # gender and family
+                    "feminist cunt",
+                    "Privilege-Denying-Feminist",
+                    "Feministfrequently",
+
+                    # Lesbian
                     "Lesbian-Scissor",
-                    "Chinese-Lesbians",
+                    "Chinese-Lesbian",
+
+                    # Trans
+                    "Oppressive-Trans-Bro",
+                    "Privilege-Denying-Tranny",
+                    "Transvestite-Trevor",
+
+                    # Gay
                     "Gay-Pornstar-Logic",
                     "Gay-Pride-Queer",
                     "Gay-Richard-Simmons",
-                    "Transvestite-Trevor",
-                    "Oppressive-Trans-Bro"
+
+                    # Police Man
+                    "Scumbag-Police-Officer", 
+                    "Strict-Policeman",
+                    "Policeman"
                     ]
 
 
+#CHOSEN_TEMPLATES = ["Provincial man"]
 print("Number of Templates: {}".format(len(CHOSEN_TEMPLATES)))
 
 CHOSEN_TEMPLATES = [template.replace("-", " ").lower().strip()
@@ -182,8 +248,21 @@ if __name__ == '__main__':
         # Deduplicate
         df = df.drop_duplicates(subset='caption')
 
+        # Define the maximum length for captions
+        # Filter rows where the caption length is within the allowed maximum length
+        # Split the 'caption' into 'top' and 'bottom' parts using the separator '<sep>'
+        df[['top_text', 'bottom_text']] = df['caption'].str.split(' <sep> ', expand=True)
+
+        # Fill NaN values with empty strings if any part is missing
+        df['top_text'] = df['top_text'].fillna('')
+        df['bottom_text'] = df['bottom_text'].fillna('')
+
+        # Filter rows where both the 'top_text' and 'bottom_text' lengths are within the allowed maximum lengths
+        filtered_df = df[(df['top_text'].apply(len) <= MAX_CHAR_LENGTH) & 
+                         (df['bottom_text'].apply(len) <= MAX_CHAR_LENGTH)]
+
+
         # For now, randomly select:
-        desired_sample_size = 600
         sample_size = min(len(df), desired_sample_size)
         if sample_size != desired_sample_size:
             print("Not Enough Samples for {}. Only {}.".format(

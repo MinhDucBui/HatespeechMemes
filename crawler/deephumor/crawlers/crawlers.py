@@ -48,6 +48,7 @@ LINKS = [
     "https://memegenerator.net/Average-Italian-Criminal",
     "https://memegenerator.net/Success-Germany",
     "https://memegenerator.net/Germany-Pls",
+    "https://memegenerator.net/Indian-Father",
 
     "https://memegenerator.net/Typical-Germany-Lover",
     "https://memegenerator.net/Average-Italian-Guy-Official",
@@ -76,10 +77,49 @@ LINKS = [
     # Politics
     "https://memegenerator.net/Feminist-Cunt",
     "https://memegenerator.net/Feministfrequently",
+    "https://memegenerator.net/Slavery",
+    "https://memegenerator.net/12-Years-A-Slave-Hangover",
+    "https://memegenerator.net/Privilege-Abusing-White-Couple",
+    "https://memegenerator.net/Muslim-Immigrant",
+    "https://memegenerator.net/Feminist-Cunt",
+    "https://memegenerator.net/Scumbag-Police-Officer",
+    "https://memegenerator.net/Strict-Policeman",
+    "https://memegenerator.net/Will-Sons-Of-Guns",
+    "https://memegenerator.net/Native-American",
+    "https://memegenerator.net/Privilege-Denying-Dude",
+    "https://memegenerator.net/Privilege-Denying-Tranny",
+
+
+    "https://memegenerator.net/Jesus-Christ",
+    "https://memegenerator.net/Ordinary-Muslim-Man",
+    "https://memegenerator.net/Confused-Muslim-Girl",
+    "https://memegenerator.net/Jewish-Dude",
+    "https://memegenerator.net/Like-A-Jew",
+    "https://memegenerator.net/American-Flag-Shotgun-Guy",
+    "https://memegenerator.net/Obese-American",
+    "https://memegenerator.net/Mexicanotriste",
+    "https://memegenerator.net/Mexicans-On-A-Truck",
+    "https://memegenerator.net/Nia-China",
+    "https://memegenerator.net/Feministfrequently",
+    "https://memegenerator.net/Privilege-Denying-Feminist",
+
 
     # Body Type
     "https://memegenerator.net/Skinny-Kid",
     "https://memegenerator.net/Fat-Girl",
+
+
+    "https://memegenerator.net/Bad-Advice-Asian",
+    "https://memegenerator.net/Troll-Asian",
+
+    "https://memegenerator.net/Y-U-So-Arab",
+    "https://memegenerator.net/Arabic-Meme",
+    "https://memegenerator.net/Richarabclap",
+
+    "https://memegenerator.net/Ignorant-White-Girl",
+    "https://memegenerator.net/Nice-White-Girl",
+    "https://memegenerator.net/White-Power-Problems",
+    "https://memegenerator.net/Policeman",
 
     ]
 
@@ -132,7 +172,7 @@ def chrome_webpage(url):
     MAX_SCOLL = 200
     count_scroll = 0
     number_scroll_trying = 0
-    MAX_SCROLL_TRYING = 10
+    MAX_SCROLL_TRYING = 15
     while True:
         # Scroll down to bottom
         try:

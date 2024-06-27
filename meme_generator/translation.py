@@ -64,7 +64,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     output_folder = args.generate_folder
-    memes_folder = args.memes
+
     # Replace with your actual column names
     headers = ['template', 'instance_id', 'caption', 'caption_original']
 

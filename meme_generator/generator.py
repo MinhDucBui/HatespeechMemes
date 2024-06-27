@@ -8,7 +8,8 @@ from tqdm import tqdm
 from langdetect import detect
 
 
-LANGUAGES = ["en", "de"]
+LANGUAGES = ["en"]
+
 
 def resize_image(filename, new_width, new_height):
     # Open the image
@@ -20,7 +21,7 @@ def resize_image(filename, new_width, new_height):
     return resized_img
 
 
-def make_meme(topString, bottomString, filename, output_file, font_path="/Library/Fonts/Impact.ttf", font_size=30):
+def make_meme(topString, bottomString, filename, output_file, font_path="/Library/Fonts/Impact.ttf", font_size=50):
     # Open the image and get its size
     img = Image.open(filename)
     new_width = 600
@@ -61,8 +62,10 @@ def make_meme(topString, bottomString, filename, output_file, font_path="/Librar
 
     # Calculate positions for top and bottom text
     top_text_position_y = 10  # Padding from the top
-    bottom_text_height = sum([get_text_size(line, font)[1] for line in bottom_lines]) + 10 * (len(bottom_lines) - 1)
-    bottom_text_position_y = image_size[1] - bottom_text_height - 10  # Padding from the bottom
+    bottom_text_height = sum([get_text_size(line, font)[1]
+                             for line in bottom_lines]) + 10 * (len(bottom_lines) - 1)
+    # Padding from the bottom
+    bottom_text_position_y = image_size[1] - bottom_text_height - 20
 
     # Draw outlines and text for top lines
     outline_range = 2
@@ -73,8 +76,10 @@ def make_meme(topString, bottomString, filename, output_file, font_path="/Librar
 
         for x in range(-outline_range, outline_range + 1):
             for y in range(-outline_range, outline_range + 1):
-                draw.text((text_position_x + x, text_position_y + y), line, (0, 0, 0), font=font)
-        draw.text((text_position_x, text_position_y), line, (255, 255, 255), font=font)
+                draw.text((text_position_x + x, text_position_y + y),
+                          line, (0, 0, 0), font=font)
+        draw.text((text_position_x, text_position_y),
+                  line, (255, 255, 255), font=font)
 
     # Draw outlines and text for bottom lines
     for i, line in enumerate(bottom_lines):
@@ -84,8 +89,10 @@ def make_meme(topString, bottomString, filename, output_file, font_path="/Librar
 
         for x in range(-outline_range, outline_range + 1):
             for y in range(-outline_range, outline_range + 1):
-                draw.text((text_position_x + x, text_position_y + y), line, (0, 0, 0), font=font)
-        draw.text((text_position_x, text_position_y), line, (255, 255, 255), font=font)
+                draw.text((text_position_x + x, text_position_y + y),
+                          line, (0, 0, 0), font=font)
+        draw.text((text_position_x, text_position_y),
+                  line, (255, 255, 255), font=font)
 
     img.save(output_file, 'JPEG')
 
@@ -96,51 +103,78 @@ if __name__ == '__main__':
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/memes')
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
-    # parser.add_argument('--save-dir', '-d', required=True, type=str,
-    #                    help='directory where the dataset should be stored')
+    parser.add_argument('--test_run', '-t',
+                        # This will set the default to False and set it to True if the flag is present
+                        action='store_true',
+                        help='Set this flag to enable test run mode. If omitted, test run mode is disabled by default.')
+
     args = parser.parse_args()
 
     folder_path = args.memes
     output_folder = args.generate_folder
-    headers = ['label', 'template', 'image']  # Replace with your actual column names
+    test_run = args.test_run
+    # Replace with your actual column names
+    headers = ['label', 'template', 'image']
 
     # Load the text file into a DataFrame
-    df_template = pd.read_csv(os.path.join(folder_path, "templates.txt"), sep='\t', names=headers)
+    df_template = pd.read_csv(os.path.join(
+        folder_path, "templates.txt"), sep='\t', names=headers)
     df_template = df_template.drop_duplicates()
 
+    templates_processed = []
     for language in LANGUAGES:
-        headers = ['template', 'instance_id', 'caption_translated', 'caption_original']
+        headers = ['template', 'instance_id',
+                   'caption_translated', 'caption_original']
         # Load the text file into a DataFrame
-        df = pd.read_csv(os.path.join(output_folder, "caption_translation", language + ".txt"), sep='\t', names=headers)
+        df = pd.read_csv(os.path.join(
+            output_folder, "caption_translation", language + ".txt"), sep='\t', names=headers)
         df = df.drop_duplicates()
-        template_ids = []
 
         for index, row in tqdm(df.iterrows()):
             # Create Path
             template_name = row["template"].split("/")[-1]
-            output_path = os.path.join(output_folder, "images", template_name, language)
-            if not os.path.exists(output_path):
-                os.makedirs(output_path)
-            output_path = os.path.join(output_path, str(row["instance_id"]) + ".jpg")
 
-            # Get Bottom & Top Strings
-            top = row["caption_translated"].split("<sep>")[0].strip()
-            bottom = row["caption_translated"].split("<sep>")[1].strip()
+            if test_run:
+                top = "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text "
+                bottom = "Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text Text"
+                print(len(bottom))
+                if template_name in templates_processed:
+                    continue
+                templates_processed.append(template_name)
+                # quick fix
+                if "asian" not in template_name.lower():
+                    continue
+                print(template_name)
+                output_path = os.path.join(
+                    output_folder, "images", template_name, language)
+                if not os.path.exists(output_path):
+                    os.makedirs(output_path)
+                output_path = os.path.join(output_path, str(row["instance_id"]) + ".jpg")
+            else:
+                output_path = os.path.join(
+                    output_folder, "images", template_name, language)
+                if not os.path.exists(output_path):
+                    os.makedirs(output_path)
+                output_path = os.path.join(output_path, str(row["instance_id"]) + ".jpg")
+                # Get Bottom & Top Strings
+                top = row["caption_translated"].split("<sep>")[0].strip()
+                bottom = row["caption_translated"].split("<sep>")[1].strip()
 
-            if top == "<emp>":
-                top = ""
-            if bottom == "<emp>":
-                bottom = ""
+                if top == "<emp>":
+                    top = ""
+                if bottom == "<emp>":
+                    bottom = ""
 
             # Get Image Path
             template_name = row["template"]
-            if not df_template.empty:
-                # For existing Deephumor dataset
-                image_file = df_template[df_template["label"] == template_name]["image"].iloc[0].split("/")[-1]
-                image_file = os.path.join(folder_path, "images", image_file)
-            else:
-                # For own crawled dataset
-                image_file = os.path.join(folder_path, "images",
+            template_name = template_name.replace(" ", "-")
+            image_file = os.path.join(
+                folder_path, "images", template_name + ".jpg")
+
+            if not os.path.exists(image_file):
+                template_name = template_name.lower()
+                image_file = os.path.join(folder_path,
+                                          "images",
                                           template_name + ".jpg")
+            print(output_path)
             make_meme(top, bottom, image_file, output_path)
-            template_ids.append(str(row["instance_id"]))
