@@ -73,7 +73,7 @@ CHOSEN_TEMPLATES = ["Scumbag-Catholic-Priest",
                     "Richarabclap",
 
                     # White
-                    "Ignorant-White-Girl",
+                    "privilege abusing white couple",
                     "Nice-White-Girl",
                     "White-Power-Problems",
 

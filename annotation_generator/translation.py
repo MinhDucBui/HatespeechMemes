@@ -7,9 +7,9 @@ from tqdm import tqdm
 from PIL import Image
 
 
-LANGUAGES = ["en"]
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
 SIZE = 100
-SAMPLE_SIZE = 4
+SAMPLE_SIZE = 3
 SEPERATOR = " // "
 
 # Set up Google Translate credentials
@@ -63,11 +63,12 @@ def process_df_wordcheck(df, sample_size=SAMPLE_SIZE):
     # Check for groups with fewer than 10 rows and raise an error if any are found
     if (group_sizes := df_group.size()).min() < sample_size:
         raise ValueError(
-            f"Some groups have fewer than 10 rows: {group_sizes[group_sizes < sample_size].to_dict()}")
+            f"Some groups have fewer than {SAMPLE_SIZE} rows: {group_sizes[group_sizes < sample_size].to_dict()}")
 
     df = df_group.apply(lambda x: x[:sample_size])
     df = df.reset_index(drop=True)
     return df
+
 
 def resize_image(filename, new_width, new_height):
     # Open the image
@@ -78,12 +79,13 @@ def resize_image(filename, new_width, new_height):
 
     return resized_img
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
     parser.add_argument('--wordplay_check', '-w', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/checking_wordplay_final')
     parser.add_argument('--output', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/translation_final')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/translation_nonhate2')
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
     parser.add_argument('--memes', '-m', type=str,
@@ -98,17 +100,16 @@ if __name__ == '__main__':
     # Replace with your actual column names
     headers = ['template', 'instance_id', 'caption', 'caption_original']
 
-    # Load the text file into a DataFrame
-    df_selection1 = pd.read_excel(os.path.join(
-        wordplay_check_folder, "multimodal.xlsx"))
-    df_selection1 = process_df_wordcheck(df_selection1)
-    df_selection2 = pd.read_excel(os.path.join(
-        wordplay_check_folder, "random.xlsx"))
-    df_selection2 = process_df_wordcheck(df_selection2)
-    df_selection = pd.concat([df_selection1, df_selection2])
-    df_selection = df_selection.sort_values(by=['processed_template'])
-
     for language in LANGUAGES:
+        # Load the text file into a DataFrame
+        df_selection1 = pd.read_excel(os.path.join(
+            wordplay_check_folder, "nonhate_doing.xlsx"))
+        df_selection1 = process_df_wordcheck(df_selection1)
+        # df_selection2 = pd.read_excel(os.path.join(
+        #     wordplay_check_folder, "random.xlsx"))
+        # df_selection2 = process_df_wordcheck(df_selection2)
+        df_selection = df_selection1
+        df_selection = df_selection.sort_values(by=['processed_template'])
         all_translations = []
 
         # Define the batch size
@@ -121,10 +122,11 @@ if __name__ == '__main__':
 
             # Slice the DataFrame to get the current batch
             batch = df_selection.iloc[start:end]
+
             captions_original = list(batch['caption'])
             captions = [caption.replace(
                 ' <sep> ', SEPERATOR) for caption in captions_original]
-            
+
             if language == "en":
                 translations = captions
             else:

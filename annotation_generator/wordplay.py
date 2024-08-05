@@ -28,7 +28,8 @@ CHOSEN_TEMPLATES = [
 
     # Islam
     "Angry Muslim Guy",
-    "Ordinary-Muslim-Man",
+    #"Ordinary-Muslim-Man",
+    "Muslim-Immigrant",
     "Confused-Muslim-Girl",
 
     # Judaism
@@ -87,7 +88,6 @@ CHOSEN_TEMPLATES = [
     # "Privilege-Denying-Dude",
 
     # Immigration
-    "Muslim-Immigrant",
 
     # Lesbian
     # "Lesbian-Scissor",
