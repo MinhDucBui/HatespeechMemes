@@ -5,7 +5,7 @@ import re
 import os
 
 
-SKIP_EXAMPLES = ["3208", "1436", "6453957", "332838", "2061647", "6167601"]
+SKIP_EXAMPLES = ["1134290", "699717", "2061647", "1436", "332838_a", "332838", "6167601"]
 
 # Batch 2
 # USER_IDS = ["660e8c48587d881a59230c90", "65fea00a473f2f7f5070f4d6", "65e0bee6f886849136294ce0"]
@@ -21,12 +21,13 @@ USER_IDS = ["65a01f3315177d3861dbdd98",
 # USER_IDS = ["65a6d650253833945cb63d9f", "6429682ff18d08f9eed7d9e7", "6438576b1860de7fc057113d", "627bccc58bb8898efd763beb"]
 
 # NEW DE MACE
-USER_IDS = ["56ee521a65ca4d000cc39e55", "5a7a1973000dab00018c3410"]
+USER_IDS = ["580cfe1ceee5dc00017599c3", "62856e7a17891912e6c6fd0a",
+            "60f4a86aeb626fcf89cbaf5a", "664512a09c0423e4ddbc89af"]
 
-# USER_IDS = "all"
+USER_IDS = "all"
 
 LANGUAGES = [
-    "en", "Main"
+    "en", "NewMain"
 ]
 
 LENGTH = 2
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     parser.add_argument('--annotation', '-a', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/data')
     parser.add_argument('--filter', '-f', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/data/filter/data/PRELIM_en.csv')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/data/filter/data/NewPRELIMde.csv')
 
     args = parser.parse_args()
     filter_file = args.filter
@@ -107,6 +108,8 @@ if __name__ == '__main__':
     if USER_IDS == "all":
         USER_IDS = prolifc_ids
 
+    df = df[USER_IDS + ["ID"]]
+
     # Identify rows where all specified columns are NaN
     rows_to_drop = df[USER_IDS].isna().all(axis=1)
 
@@ -117,6 +120,9 @@ if __name__ == '__main__':
     df_control = calculate_0_1s(df_control)
     overlap = sum((df_control['count_0s'] == LENGTH) |
                   (df_control['count_1s'] == LENGTH))
+
+    # Display all columns in a DataFrame
+    pd.set_option('display.max_columns', None)
     print(df_control)
     print("\nControl:\n", overlap)
 

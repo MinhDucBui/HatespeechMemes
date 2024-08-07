@@ -27,5 +27,5 @@ def restructure_folders(base_path):
 
 # Example usage:
 # Replace with the actual path to the directory containing the batch folders
-base_path = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form/de'
+base_path = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_nonhate'
 restructure_folders(base_path)

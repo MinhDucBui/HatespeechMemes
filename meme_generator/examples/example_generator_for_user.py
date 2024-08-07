@@ -35,18 +35,18 @@ def get_examples(language):
         examples = {
             "1134290.jpg": ["SPRICHST IHN AUF FRANZÖSISCH AN", "ANTWORTET DIR IN EIN UNVERSTÄNDLICHEM ENGLISCH"],
             "699717.jpg": ["SCHEIß AUF", "STEVE JOBS"],
-            "2061647.jpg": ["NIE STEUERN ZAHLEN", "UND IMMER BETRUNKEN"],  # Baby
-            "1436.jpg": ["SPARE VIEL GELD AN KLAMOTTEN", "WEIL WIR ALLE KLEIN SIND"],  # Asian Male
-            "332838_a.jpg": ["DAS IST DEIN NEUER NACHBAR", "DU MUSST VORSICHTIGER SEIN"],
-            "332838.jpg": ["ICH HOFFE DASS EINES TAGES", "WIR ALLE IN FRIEDEN LEBEN KÖNNEN"],
+            "2061647.jpg": ["NIE STEUERN ZAHLEN", "UND IMMER BETRUNKEN"],  # Native
+            "1436.jpg": ["JIAN MIN SAGT ER IST EIN GUTER FAHRER", "GUTER WITZ"],  # Asian Male
+            "332838_a.jpg": ["DAS IST DEIN NEUER NACHBAR", "DU MUSS JETZT VORSICHTIGER SEIN"],
+            "332838.jpg": ["SCHEIßE JA", "IST ES FREITAG"],
         }
     if language == "en":
         examples = {
-            "3208.jpg": ["TALK TO HIM IN FRENCH", "ANSWERS YOU WITH AN INCOMPREHENSIBLE ENGLISH"],
+            "1134290.jpg": ["TALK TO HIM IN FRENCH", "ANSWERS YOU WITH AN INCOMPREHENSIBLE ENGLISH"],
             "2061647.jpg": ["NEVER PAYING TAXES", "AND ALWAYS DRUNK"],
-            "1436.jpg": ["SAVING A LOT OF MONEY ON CLOTHES", "BECAUSE WE ARE ALL SMALL"],
-            "332838_a.jpg": ["THIS IS YOUR NEW NEIGHBOR", "HAVE TO BE MORE CAREFUL"],
-            "332838.jpg": ["I HOPE ONE DAY", "WE CAN ALL LIVE IN PEACE TOGETHER"],  # Muslim Man
+            "1436.jpg": ["JIAN MIN SAYS HES A GOOD DRIVER", "GOOD JOKE"],  # Asian Male
+            "332838_a.jpg": ["THIS IS YOUR NEW NEIGHBOR", "YOU HAVE TO BE MORE CAREFUL NOW"], # Non Hate Muslim Crowd
+            "332838.jpg": ["FUCK YEAH", "ITS FRIDAY"],  # Non Muslim Man
         }
 
     return examples
