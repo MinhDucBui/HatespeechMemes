@@ -2,7 +2,6 @@ import argparse
 import pandas as pd
 import re
 import os
-import numpy as np
 import krippendorff
 
 DONT_KNOW = -1
@@ -15,13 +14,11 @@ SKIP_EXAMPLES = {"1134290": 0.0,
                  "332838": 1.0,
                  "6167601": 0.0
                  }
-#SKIP_EXAMPLES = ["1134290", "699717", "2061647", "1436", "332838_a", "332838", "6167601"]
 
 LANGUAGES = {
     "es": "PRELIMINARY "
 }
 
-# USER_IDS = ["663bc6326df9a16437a08660", "6631e783e321299d4d737ec2", "655f017761462616d393ed61", "660afb99816308580be88c56"]
 USER_IDS = "all"
 
 
@@ -53,7 +50,6 @@ def transform_data_into_pd(df_annotation):
         elif "Bitte geben Sie Ihre Prolific-ID ein" in row.keys():
             prolific_id = row["Bitte geben Sie Ihre Prolific-ID ein"]
 
-        # if prolific_id != "65fea00a473f2f7f5070f4d6" and prolific_id != "660e8c48587d881a59230c90":
         prolifc_ids.append(prolific_id)
 
         for key in df_annotation.keys():
@@ -169,7 +165,7 @@ if __name__ == '__main__':
 
         rows_to_keep = df.drop(columns=['Image ID']).isna().all(axis=1)
         df = df[~rows_to_keep]
-        #df = df.drop(columns=REMOVE_IDS)
+        # df = df.drop(columns=REMOVE_IDS)
         # Remove Skip Examples
         df = df[~df["Image ID"].isin(SKIP_EXAMPLES.keys())]
         non_hate_count = df.apply(lambda row: (row == 0).sum(), axis=1)
@@ -184,11 +180,12 @@ if __name__ == '__main__':
             df["hate_count"] == df["total_valid_count"])].copy()
         df_subset['hatespeech'] = df_subset['hate_count'] == df_subset["total_valid_count"]
         pd.set_option('display.max_columns', None)  # Show all columns
-        pd.set_option('display.expand_frame_repr', False)  # Do not wrap the DataFrame display
+        # Do not wrap the DataFrame display
+        pd.set_option('display.expand_frame_repr', False)
 
         reliability_data = []
         for index, id in enumerate(USER_IDS):
-            #if id in REMOVE_IDS:
+            # if id in REMOVE_IDS:
             #    continue
             reliability_data.append(list(df_subset[id]))
 
