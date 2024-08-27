@@ -12,7 +12,7 @@ from spacy.tokens import Doc
 
 LANGUAGES = ["en"]
 LANGUAGES = ["en", "de", "hi", "es", "zh"]
-LANGUAGES = ["zh"]
+LANGUAGES = ["es"]
 
 
 if __name__ == '__main__':

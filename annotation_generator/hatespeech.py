@@ -12,7 +12,7 @@ from spacy.tokens import Doc
 
 LANGUAGES = ["en"]
 LANGUAGES = ["en", "de", "hi", "es", "zh"]
-#LANGUAGES = ["zh"]
+LANGUAGES = ["hi", "es", "zh"]
 
 
 FONT_MAPPING = {
@@ -222,10 +222,15 @@ if __name__ == '__main__':
             non_empty = pd.notna(df_annotation['2nd: Correct Translation'])
             df_annotation.loc[non_empty, 'Translation'] = df_annotation.loc[non_empty,
                                                                             '2nd: Correct Translation']
+
+        if "3nd: Correct Translation" in df_annotation.keys():
+            non_empty = pd.notna(df_annotation['3nd: Correct Translation'])
+            df_annotation.loc[non_empty, 'Translation'] = df_annotation.loc[non_empty,
+                                                                            '3nd: Correct Translation']
         df_hatespeech["Caption"] = df_annotation["Translation"]
         df_hatespeech['Caption'] = df_hatespeech['Caption'].apply(
             lambda x: x if pd.isna(x) else x.replace('\u200b', ''))
- 
+
         writer = pd.ExcelWriter(os.path.join(
             output_folder, language + ".xlsx"), engine='xlsxwriter')
         df_hatespeech.to_excel(writer, sheet_name='Sheet1')

@@ -6,9 +6,11 @@ import pandas as pd
 from typing import List
 
 
-BATCH_SIZE = 36
+BATCH_SIZE = 16
+NUM_BATCHES = 25
 PAGE_SIZE = 6
-LANGUAGE = ["en", "de"]
+LANGUAGE = ["en", "de", "zh", "hi", "es"]
+LANGUAGE_FILTER = ["es"]
 random.seed(42)
 
 
@@ -49,9 +51,6 @@ def redistribute_elements(groups, num_batches):
             batches[current_batch].append(element)
             current_batch = (current_batch + 1) % num_batches
 
-    for i, batch in enumerate(batches):
-        print("Length of batch {}: {}".format(i, len(batch)))
-
     return batches
 
 
@@ -60,15 +59,15 @@ def restructure_list_of_lists(lists):
     flat_list = [item for sublist in lists for item in sublist]
 
     # Split the flattened list into chunks of 36 elements
-    restructured_list = [flat_list[i:i + 27]
-                         for i in range(0, len(flat_list), 27)]
+    restructured_list = [flat_list[i:i + 16]
+                         for i in range(0, len(flat_list), 16)]
 
     return restructured_list
 
 
 def filter_batch(all_groups, filter_folder):
     df_filtered = []
-    for language in LANGUAGE:
+    for language in LANGUAGE_FILTER:
         filter_language = os.path.join(
             filter_folder + language + ".csv")
         if os.path.isfile(filter_language):
@@ -93,15 +92,18 @@ if __name__ == '__main__':
     parser.add_argument('--hatespeech', '-s', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate/images')
     parser.add_argument('--output', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_nonhate_filter')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16')
     parser.add_argument('--filter', '-f', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/data/filter/data/NewPrelim')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_full_aggreement/PRELIMINARY ')
 
     args = parser.parse_args()
 
     hatespeech_folder = args.hatespeech
     outpot_folder = args.output
     filter_folder = args.filter
+
+    if LANGUAGE_FILTER != []:
+        outpot_folder = outpot_folder + "_filtered"
 
     sourcing_folder = os.path.join(hatespeech_folder, "en")
 
@@ -118,20 +120,28 @@ if __name__ == '__main__':
             all_groups.append(instances)
 
     # Distribute the instances
-    all_groups = redistribute_elements(all_groups, 15)
+    all_groups = redistribute_elements(all_groups, NUM_BATCHES)
 
-    if filter_folder != "":
+    if filter_folder != "" and LANGUAGE_FILTER != []:
         all_groups = filter_batch(all_groups, filter_folder)
+
+    for i, batch in enumerate(all_groups):
+        print("Length of batch {}: {}".format(i, len(batch)))
 
     max_page = 4
     for language in LANGUAGE:
+        if LANGUAGE_FILTER != []:
+            outpot_folder_language = os.path.join(outpot_folder, LANGUAGE_FILTER[0] + "_main")
+        else:
+            outpot_folder_language = os.path.join(outpot_folder)
+        os.makedirs(outpot_folder_language, exist_ok=True)
         page_index = 0
         for index_batch, group in enumerate(all_groups):
             for instance_index, instance in enumerate(group):
 
                 instance = instance.replace("/en/", "/{}/".format(language))
                 batch_folder = os.path.join(
-                    outpot_folder, language, "batch_" + str(index_batch), str(page_index))
+                    outpot_folder_language, language, "batch_" + str(index_batch), str(page_index))
                 os.makedirs(batch_folder, exist_ok=True)
                 if instance is not None:
                     filename = instance.split("/")[-1]

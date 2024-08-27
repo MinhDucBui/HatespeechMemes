@@ -2,15 +2,13 @@ import argparse
 from PIL import ImageFont
 from PIL import Image
 from PIL import ImageDraw
-import pandas as pd
 import os
-from tqdm import tqdm
 import spacy
 import jieba
 from spacy.tokens import Doc
 
 
-LANGUAGES = ["en", "de"]
+LANGUAGES = ["es", "hi", "zh"]
 
 
 FONT_MAPPING = {
@@ -33,12 +31,12 @@ FONT_HEIGHT = {
 def get_examples(language):
     if language == "de":
         examples = {
-            "1134290.jpg": ["SPRICHST IHN AUF FRANZÖSISCH AN", "ANTWORTET DIR IN EIN UNVERSTÄNDLICHEM ENGLISCH"],
-            "699717.jpg": ["SCHEIß AUF", "STEVE JOBS"],
-            "2061647.jpg": ["NIE STEUERN ZAHLEN", "UND IMMER BETRUNKEN"],  # Native
-            "1436.jpg": ["JIAN MIN SAGT ER IST EIN GUTER FAHRER", "GUTER WITZ"],  # Asian Male
-            "332838_a.jpg": ["DAS IST DEIN NEUER NACHBAR", "DU MUSS JETZT VORSICHTIGER SEIN"],
+            # 6167601
             "332838.jpg": ["SCHEIßE JA", "IST ES FREITAG"],
+            "1134290.jpg": ["SPRICHST IHN AUF FRANZÖSISCH AN", "ANTWORTET DIR IN EIN UNVERSTÄNDLICHEM ENGLISCH"],
+            "1436.jpg": ["JIAN MIN SAGT ER IST EIN GUTER FAHRER", "GUTER WITZ"],  # Asian Male
+            "2061647.jpg": ["NIE STEUERN ZAHLEN", "UND IMMER BETRUNKEN"],  # Native
+            "332838_a.jpg": ["DAS IST DEIN NEUER NACHBAR", "DU MUSS JETZT VORSICHTIGER SEIN"],
         }
     if language == "en":
         examples = {
@@ -47,6 +45,37 @@ def get_examples(language):
             "1436.jpg": ["JIAN MIN SAYS HES A GOOD DRIVER", "GOOD JOKE"],  # Asian Male
             "332838_a.jpg": ["THIS IS YOUR NEW NEIGHBOR", "YOU HAVE TO BE MORE CAREFUL NOW"], # Non Hate Muslim Crowd
             "332838.jpg": ["FUCK YEAH", "ITS FRIDAY"],  # Non Muslim Man
+        }
+
+    if language == "hi":
+        examples = {
+            "1134290.jpg": ["उससे फ्रेंच में बात करें", "वह आपको समझ से परे अंग्रेजी में जवाब देगा"],
+            "2061647.jpg": ["कभी टैक्स नहीं चुकाना", "और हमेशा नशे में रहना"],
+            "1436.jpg": ["जियान मिन कहते हैं कि वह एक अच्छे ड्राइवर हैं", "अच्छा मजाक"],  # Asian Male
+            "6167601.jpg":  ["इस छवि के लिए 'मुझे नहीं पता' पर क्लिक करें", "यह एक ध्यान परीक्षक है"],  # Attention False
+            "332838_a.jpg": ["यह आपका नया पड़ोसी है", "अब आपको अधिक सावधान रहना होगा"], # Non Hate Muslim Crowd
+            "332838.jpg": ["FUCK YEAH", "यह शुक्रवार ह"],  # Non Muslim Man
+            "6167601.jpg":  ["इस छवि के लिए 'मुझे नहीं पता' पर क्लिक करें", "यह एक ध्यान जांचकर्ता है"],  # Attention False
+        }
+
+    if language == "zh":
+        examples = {
+            "1134290.jpg": ["用法语和他交谈", "用难以理解的英语回答你"],
+            "2061647.jpg": ["从不纳税", "而且总是喝醉"],
+            "1436.jpg": ["建民说他是个好司机", "好笑话"],  # Asian Male
+            "332838_a.jpg": ["这是你的新邻居", "你现在必须更加小心"], # Non Hate Muslim Crowd
+            "332838.jpg": ["真他妈爽", "今天是星期五"],  # Non Muslim Man
+            "6167601.jpg":  ["对于此图像，请点击‘我不知道’", "这是一个注意检查器"],  # Attention False
+        }
+
+    if language == "es":
+        examples = {
+            "1134290.jpg": ["HÁBLALE EN FRANCÉS", "TE RESPONDE CON UN INGLÉS INCOMPRENSIBLE"],
+            "2061647.jpg": ["NUNCA PAGANDO IMPUESTOS", "Y SIEMPRE BORRACHO"],
+            "1436.jpg": ["JIAN MIN DICE QUE ES UN BUEN CONDUCTOR", "BUENA BROMA"],  # Asian Male
+            "332838_a.jpg": ["ESTE ES TU NUEVO VECINO", "AHORA TIENES QUE TENER MÁS CUIDADO"], # Non Hate Muslim Crowd
+            "332838.jpg": ["Joder sí", "es viernes"],  # Non Muslim Man
+            "6167601.jpg":  ["PARA ESTA IMAGEN HAGA CLIC EN 'No sé'", "ESTO ES UN COMPROBADOR DE ATENCIÓN"],  # Attention False
         }
 
     return examples
@@ -184,7 +213,7 @@ if __name__ == '__main__':
         # output_filename = os.path.join(output_path, filename)
 
         examples = get_examples(language)
-
+        os.makedirs(output_path, exist_ok=True)
         for key, value in examples.items():
             output_filename = os.path.join(output_path, key)
             image_file = os.path.join(image_folder, key)

@@ -5,32 +5,16 @@ import re
 import os
 
 
-SKIP_EXAMPLES = ["1134290", "699717", "2061647", "1436", "332838_a", "332838", "6167601"]
-
-# Batch 2
-# USER_IDS = ["660e8c48587d881a59230c90", "65fea00a473f2f7f5070f4d6", "65e0bee6f886849136294ce0"]
-
-# Batch 1
-USER_IDS = ["65a01f3315177d3861dbdd98",
-            "6510335c6c5ba95f95c5af89", "664bc3f078a2df44ca254e10"]
-
-# EN MACE
-# USER_IDS = ["5f622ab951e8d7229eced89f", "668f9be093060d7620e0507b", "65f99b502e81655ac7459020", "667aa8193c8a13d292ac9822"]
-
-# DE MACE
-# USER_IDS = ["65a6d650253833945cb63d9f", "6429682ff18d08f9eed7d9e7", "6438576b1860de7fc057113d", "627bccc58bb8898efd763beb"]
-
-# NEW DE MACE
-USER_IDS = ["580cfe1ceee5dc00017599c3", "62856e7a17891912e6c6fd0a",
-            "60f4a86aeb626fcf89cbaf5a", "664512a09c0423e4ddbc89af"]
+SKIP_EXAMPLES = ["1134290", "699717", "2061647",
+                 "1436", "332838_a", "332838", "6167601"]
 
 USER_IDS = "all"
 
 LANGUAGES = [
-    "en", "NewMain"
+    "de", "MAIN "
 ]
 
-LENGTH = 2
+LENGTH = 3
 
 
 def calculate_0_1s(df):
@@ -47,9 +31,9 @@ def calculate_0_1s(df):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
     parser.add_argument('--annotation', '-a', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/data')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main/en')
     parser.add_argument('--filter', '-f', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/data/filter/data/NewPRELIMde.csv')
+                        default='')
 
     args = parser.parse_args()
     filter_file = args.filter
@@ -66,7 +50,7 @@ if __name__ == '__main__':
     for index, row in df_annotation.iterrows():
         ids_all.append([])
         hate_binary_all.append([])
-        if language == "en":
+        if language == "en" or language == "zh" or language == "hi" or language == "es":
             prolifc_ids.append(row["Please enter your Prolific ID"])
         elif language == "de":
             prolifc_ids.append(row["Bitte geben Sie Ihre Prolific-ID ein"])
@@ -88,6 +72,43 @@ if __name__ == '__main__':
                         hate_binary_all[index].append(1)
                     elif row[key] == "Keine Hassrede":
                         hate_binary_all[index].append(0)
+                    else:
+                        hate_binary_all[index].append(None)
+                    ids_all[index].append(id_number)
+
+            if language == "zh":
+                if "请提供您对问题的反馈" in key:
+                    id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
+                    if row[key] == "仇恨言论":
+                        hate_binary_all[index].append(1)
+                    elif row[key] == "非仇恨言论":
+                        hate_binary_all[index].append(0)
+                    # elif row[key] == "Ich Weiß Nicht":
+                    #    hate_binary_all[index].append(0)
+                    else:
+                        hate_binary_all[index].append(None)
+                    ids_all[index].append(id_number)
+
+            if language == "hi":
+                if "कृपया प्रश्न के लिए अपनी प्रतिक्रिया" in key:
+                    id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
+                    if row[key] == "घृणास्पद भाषण है":
+                        hate_binary_all[index].append(1)
+                    elif row[key] == "गैर-घृणास्पद भाषण":
+                        hate_binary_all[index].append(0)
+                    # elif row[key] == "Ich Weiß Nicht":
+                    #    hate_binary_all[index].append(0)
+                    else:
+                        hate_binary_all[index].append(None)
+                    ids_all[index].append(id_number)
+
+            if language == "es":
+                if "Por favor, proporcione sus comentarios sobre la pregunta" in key:
+                    id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
+                    if row[key] == "Discurso de odio":
+                        hate_binary_all[index].append(1)
+                    elif row[key] == "Discurso sin odio":
+                        hate_binary_all[index].append(0)
                     # elif row[key] == "Ich Weiß Nicht":
                     #    hate_binary_all[index].append(0)
                     else:
@@ -102,7 +123,6 @@ if __name__ == '__main__':
         new_dict[prolifc_ids[key]] = hate_binary
     df = pd.DataFrame(new_dict)
     df["ID"] = df["ID"].astype(str)
-    # prolifc_ids = prolifc_ids[3:-1]
 
     # df = df[["ID"] + USER_IDS]
     if USER_IDS == "all":
@@ -142,13 +162,13 @@ if __name__ == '__main__':
             df["hatespeech_" + str(i)] = df["hatespeech"].astype(float)
             USER_IDS.append("hatespeech_" + str(i))
         df = df.drop(columns=['hatespeech', 'Image ID'])
-
     for index, id in enumerate(USER_IDS):
         reliability_data.append(list(df[id]))
+    # for index in range(len(reliability_data)):
+    #    import numpy as np
+    #    reliability_data[index].append(np.nan)
 
-    alpha = krippendorff.alpha(
-        reliability_data=reliability_data, level_of_measurement="nominal")
-    print("\nKrippendorff's alpha: ", alpha)
+    # reliability_data = [reliability_data[i] for i in [6, 7]]
 
     df = df.set_index('ID')
 
@@ -160,6 +180,10 @@ if __name__ == '__main__':
         print(
             f"{column}: 0s = {zero_count}, 1s = {one_count}, -1s = {36-zero_count-one_count}")
 
+    alpha = krippendorff.alpha(
+        reliability_data=reliability_data, level_of_measurement="nominal")
+    print("\nKrippendorff's alpha: ", alpha)
+
     df = calculate_0_1s(df)
 
     overlap = sum((df['count_0s'] == LENGTH) | (df['count_1s'] == LENGTH))
@@ -168,6 +192,13 @@ if __name__ == '__main__':
           total * 100, 2), overlap, total))
     print("Count of 0s: {}\nCount of 1s: {}".format(
         sum((df['count_0s'] == LENGTH)), sum(df['count_1s'] == LENGTH)))
+
+    hard_2 = sum((df['count_0s'] == 1) & (df['count_1s'] == 2))
+    hard_1 = sum((df['count_0s'] == 2) & (df['count_1s'] == 1))
+    print("Hard Conflicts: {} & {}".format(hard_1, hard_2))
+    soft = sum((df['count_0s'] == 1) & (df['count_1s'] == 1))
+    print("Soft Conflicts: {}".format(soft))
+    print("All Conflicts: {}".format(hard_2+hard_1+soft))
 
     df = df[(df['count_0s'] >= LENGTH) | (df['count_1s'] >= LENGTH)]
 

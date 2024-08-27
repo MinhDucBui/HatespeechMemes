@@ -2,7 +2,7 @@ import argparse
 import shutil
 import os
 
-LANGUAGES = ["de", "en"]
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
 
 
 def count_files_in_directory(directory):
@@ -20,8 +20,9 @@ def find_smallest_index(lst):
     # Find the minimum element in the list
     min_value = min(lst)
     # Get the index of the minimum element
-    min_index = lst.index(min_value)
-    return min_index
+    min_indices = [i for i, value in enumerate(lst) if value == min_value]
+
+    return min_indices
 
 
 if __name__ == '__main__':
@@ -29,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--image_folder', '-i', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/examples/output/user_')
     parser.add_argument('--output_path', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_nonhate_filter/')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_filtered/en_main/')
     args = parser.parse_args()
 
     for language in LANGUAGES:
@@ -53,25 +54,28 @@ if __name__ == '__main__':
 
                 # Pair the elements with their corresponding indices
                 paired_list = list(zip(batch_indices, length_batch))
-                sorted_pairs = sorted(paired_list)
-                length_batch = [element for _, element in sorted_pairs]
+                #sorted_pairs = sorted(paired_list)
+                length_batch = [element for _, element in paired_list]
+                sum_batch = sum(length_batch)
 
-                fill_index = find_smallest_index(length_batch)
-                batch_indices.sort()
+                min_indices = find_smallest_index(length_batch)
+                #batch_indices.sort()
+                #min_indices.sort()
 
                 for filename in os.listdir(image_folder):
                     instance_path = os.path.join(image_folder, filename)
 
                     if "1436.jpg" in instance_path:  # Asian
-                        folder_index = 1
+                        folder_index = min_indices[2]
                     elif "1134290.jpg" in instance_path:  # French
-                        folder_index = fill_index
+                        if sum_batch == 16:
+                            folder_index = min_indices[3]
+                        else:
+                            continue
                     elif "332838.jpg" in instance_path:  # Muslim Nonhate
-                        folder_index = 3
+                        folder_index = min_indices[0]
                     elif "6167601.jpg" in instance_path:  # Attention Checker
-                        folder_index = 2
-                    elif "2061647.jpg" in instance_path:  # Native American
-                        folder_index = 0
+                        folder_index = min_indices[1]
                     else:
                         continue
 
