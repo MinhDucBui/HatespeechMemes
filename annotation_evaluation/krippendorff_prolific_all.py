@@ -8,11 +8,28 @@ import os
 SKIP_EXAMPLES = ["1134290", "699717", "2061647",
                  "1436", "332838_a", "332838", "6167601"]
 
+DONT_KNOW = None
+
 USER_IDS = "all"
 
+# USER_IDS = ["654a45537577dbb4a1df935a", "65aa84f1aad8b6c3907b39de", "66b65703d01d3e754609455c",
+#             "66ccd0c19cae4e65612c78f4", "66859847921f89ca3054d41f", "665f0cf75523dc9152c4af04"]
+# USER_IDS = ["65fabcadbea8447f5c937935", "65fb14f7d8a3890c20fac495", "6637725bb8c26344d88019bb"]
+
+import itertools
+# combinations = list(itertools.combinations(USER_IDS, 3))
+# nested_list = [list(combo) for combo in combinations]
+# USER_IDS = nested_list[7]
+
+print(USER_IDS)
+
+
 LANGUAGES = [
-    "de", "MAIN "
+    "hi", "MAIN "
 ]
+
+FILTERS = ["de", "en", "es", "hi", "zh", "2nd"]
+# FILTERS = ["2nd"]
 
 LENGTH = 3
 
@@ -28,55 +45,48 @@ def calculate_0_1s(df):
     return df
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Meme dataset crawler')
-    parser.add_argument('--annotation', '-a', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main/en')
-    parser.add_argument('--filter', '-f', type=str,
-                        default='')
-
-    args = parser.parse_args()
-    filter_file = args.filter
-    language = LANGUAGES[0]
-    prefix = LANGUAGES[1]
-    file = os.path.join(args.annotation, prefix +
-                        f"{language}_ Cross-Cultural Hate Speech Detection in Memes (Antworten).xlsx")
-
-    df_annotation = pd.read_excel(file)
-
+def transform_data_into_pd(df_annotation):
     ids_all = []
     hate_binary_all = []
     prolifc_ids = []
     for index, row in df_annotation.iterrows():
         ids_all.append([])
         hate_binary_all.append([])
-        if language == "en" or language == "zh" or language == "hi" or language == "es":
-            prolifc_ids.append(row["Please enter your Prolific ID"])
-        elif language == "de":
-            prolifc_ids.append(row["Bitte geben Sie Ihre Prolific-ID ein"])
-        for key in df_annotation.keys():
-            if language == "en":
-                if "Please provide your feedback for Question" in key:
-                    id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
-                    if row[key] == "Hate Speech":
-                        hate_binary_all[index].append(1)
-                    elif row[key] == "Non-Hate Speech":
-                        hate_binary_all[index].append(0)
-                    else:
-                        hate_binary_all[index].append(None)
-                    ids_all[index].append(id_number)
-            if language == "de":
-                if "Bitte geben Sie Ihr Feedback zu Frage" in key:
-                    id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
-                    if row[key] == "Hassrede":
-                        hate_binary_all[index].append(1)
-                    elif row[key] == "Keine Hassrede":
-                        hate_binary_all[index].append(0)
-                    else:
-                        hate_binary_all[index].append(None)
-                    ids_all[index].append(id_number)
+        if "Please enter your Prolific ID" in row.keys():
+            prolific_id = row["Please enter your Prolific ID"]
+        elif "Bitte geben Sie Ihre Prolific-ID ein" in row.keys():
+            prolific_id = row["Bitte geben Sie Ihre Prolific-ID ein"]
 
-            if language == "zh":
+        # if prolific_id != "65fea00a473f2f7f5070f4d6" and prolific_id != "660e8c48587d881a59230c90":
+        prolifc_ids.append(prolific_id)
+
+        for key in df_annotation.keys():
+            if "Please provide your feedback for Question" in key:
+                id_number = re.search(
+                    r'\((\-?\d+)\.jpg\)', key).group(1)
+                if row[key] == "Hate Speech":
+                    hate_binary_all[index].append(1)
+                elif row[key] == "Non-Hate Speech":
+                    hate_binary_all[index].append(0)
+                elif row[key] == "I Don't Know":
+                    hate_binary_all[index].append(DONT_KNOW)
+                else:
+                    hate_binary_all[index].append(None)
+                ids_all[index].append(id_number)
+            elif "Bitte geben Sie Ihr Feedback zu Frage" in key:
+                id_number = re.search(
+                    r'\((\-?\d+)\.jpg\)', key).group(1)
+                if row[key] == "Hassrede":
+                    hate_binary_all[index].append(1)
+                elif row[key] == "Keine Hassrede":
+                    hate_binary_all[index].append(0)
+                elif row[key] == "Ich Weiß Nicht":
+                    hate_binary_all[index].append(DONT_KNOW)
+                else:
+                    hate_binary_all[index].append(None)
+                ids_all[index].append(id_number)
+
+            elif language == "zh":
                 if "请提供您对问题的反馈" in key:
                     id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
                     if row[key] == "仇恨言论":
@@ -89,7 +99,7 @@ if __name__ == '__main__':
                         hate_binary_all[index].append(None)
                     ids_all[index].append(id_number)
 
-            if language == "hi":
+            elif language == "hi":
                 if "कृपया प्रश्न के लिए अपनी प्रतिक्रिया" in key:
                     id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
                     if row[key] == "घृणास्पद भाषण है":
@@ -102,7 +112,7 @@ if __name__ == '__main__':
                         hate_binary_all[index].append(None)
                     ids_all[index].append(id_number)
 
-            if language == "es":
+            elif language == "es":
                 if "Por favor, proporcione sus comentarios sobre la pregunta" in key:
                     id_number = re.search(r'\((\-?\d+)\.jpg\)', key).group(1)
                     if row[key] == "Discurso de odio":
@@ -115,20 +125,53 @@ if __name__ == '__main__':
                         hate_binary_all[index].append(None)
                     ids_all[index].append(id_number)
 
-    # Creating the DataFrame
-    new_dict = {
-        'ID': ids_all[0],
-    }
-    for key, hate_binary in enumerate(hate_binary_all):
-        new_dict[prolifc_ids[key]] = hate_binary
-    df = pd.DataFrame(new_dict)
-    df["ID"] = df["ID"].astype(str)
+    return ids_all, hate_binary_all, prolifc_ids
 
-    # df = df[["ID"] + USER_IDS]
-    if USER_IDS == "all":
-        USER_IDS = prolifc_ids
 
-    df = df[USER_IDS + ["ID"]]
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser('Meme dataset crawler')
+    parser.add_argument('--annotation', '-a', type=str,
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main/')
+    parser.add_argument('--filter', '-f', type=str,
+                        default='')
+
+    args = parser.parse_args()
+    filter_file = args.filter
+    language = LANGUAGES[0]
+    prefix = LANGUAGES[1]
+
+    all_dfs = []
+    all_prolifc_ids = []
+    for filter in FILTERS:
+        file = os.path.join(args.annotation + filter, prefix +
+                            f"{language}_ Cross-Cultural Hate Speech Detection in Memes (Antworten).xlsx")
+
+        df_annotation = pd.read_excel(file)
+
+        ids_all = []
+        hate_binary_all = []
+        prolifc_ids = []
+        ids_all, hate_binary_all, prolifc_ids = transform_data_into_pd(
+            df_annotation)
+        # Creating the DataFrame
+        new_dict = {
+            'ID': ids_all[0],
+        }
+        for key, hate_binary in enumerate(hate_binary_all):
+            new_dict[prolifc_ids[key]] = hate_binary
+        df = pd.DataFrame(new_dict)
+        df["ID"] = df["ID"].astype(str)
+
+        # df = df[["ID"] + USER_IDS]
+        if USER_IDS == "all":
+            USER_IDS = prolifc_ids
+        all_prolifc_ids = all_prolifc_ids + USER_IDS
+        df = df[USER_IDS + ["ID"]]
+        all_dfs.append(df)
+        USER_IDS = "all"
+
+    USER_IDS = all_prolifc_ids
+    df = pd.concat(all_dfs, ignore_index=True)
 
     # Identify rows where all specified columns are NaN
     rows_to_drop = df[USER_IDS].isna().all(axis=1)
@@ -162,13 +205,11 @@ if __name__ == '__main__':
             df["hatespeech_" + str(i)] = df["hatespeech"].astype(float)
             USER_IDS.append("hatespeech_" + str(i))
         df = df.drop(columns=['hatespeech', 'Image ID'])
+
     for index, id in enumerate(USER_IDS):
         reliability_data.append(list(df[id]))
-    # for index in range(len(reliability_data)):
-    #    import numpy as np
-    #    reliability_data[index].append(np.nan)
-
-    # reliability_data = [reliability_data[i] for i in [6, 7]]
+    print("Total Amount of People: {}".format(len(reliability_data)))
+    print("Total Amount of Data: {}".format(len(reliability_data[0])))
 
     df = df.set_index('ID')
 
@@ -176,20 +217,20 @@ if __name__ == '__main__':
     count_0s = df.apply(lambda col: (col == 0).sum())
     count_1s = df.apply(lambda col: (col == 1).sum())
 
-    for column, (zero_count, one_count) in zip(df.columns, zip(count_0s, count_1s)):
-        print(
-            f"{column}: 0s = {zero_count}, 1s = {one_count}, -1s = {36-zero_count-one_count}")
-
+    #for column, (zero_count, one_count) in zip(df.columns, zip(count_0s, count_1s)):
+    #    print(
+    #        f"{column}: 0s = {zero_count}, 1s = {one_count}, -1s = {36-zero_count-one_count}")
     alpha = krippendorff.alpha(
         reliability_data=reliability_data, level_of_measurement="nominal")
     print("\nKrippendorff's alpha: ", alpha)
+    print("Num People: ", len(df.keys()))
 
     df = calculate_0_1s(df)
 
     overlap = sum((df['count_0s'] == LENGTH) | (df['count_1s'] == LENGTH))
     total = len(df)
     print("\nPercentage: {}% ({}/{})".format(round(overlap /
-          total * 100, 2), overlap, total))
+                                                   total * 100, 2), overlap, total))
     print("Count of 0s: {}\nCount of 1s: {}".format(
         sum((df['count_0s'] == LENGTH)), sum(df['count_1s'] == LENGTH)))
 
@@ -200,12 +241,4 @@ if __name__ == '__main__':
     print("Soft Conflicts: {}".format(soft))
     print("All Conflicts: {}".format(hard_2+hard_1+soft))
 
-    df = df[(df['count_0s'] >= LENGTH) | (df['count_1s'] >= LENGTH)]
-
-    reliability_data = []
-    for index, id in enumerate(USER_IDS):
-        reliability_data.append(list(df[id]))
-
-    alpha = krippendorff.alpha(
-        reliability_data=reliability_data, level_of_measurement="nominal")
-    print("\nKrippendorff's alpha: ", alpha)
+    USER_IDS = "all"

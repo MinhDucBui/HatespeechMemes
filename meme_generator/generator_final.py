@@ -8,7 +8,7 @@ from tqdm import tqdm
 from langdetect import detect
 
 
-LANGUAGES = ["de"]
+LANGUAGES = ["hi"]
 
 
 def resize_image(filename, new_width, new_height):

@@ -2,21 +2,16 @@ import argparse
 import pandas as pd
 import re
 import os
-import krippendorff
+from itertools import chain
 
-DONT_KNOW = -1
+DONT_KNOW = None
 
-SKIP_EXAMPLES = {"1134290": 0.0,
-                 "699717": 1.0,
-                 "2061647": 1.0,
-                 "1436": 0.0,
-                 "332838_a": 0.0,
-                 "332838": 1.0,
-                 "6167601": 0.0
-                 }
+
+SKIP_EXAMPLES = ["1134290", "699717", "2061647",
+                 "1436", "332838", "6167601"]
 
 LANGUAGES = {
-    "zh": "PRELIMINARY "
+    "hi": "PRELIMINARY "
 }
 
 USER_IDS = "all"
@@ -128,9 +123,11 @@ def check_all_equal(lst):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
     parser.add_argument('--output_folder', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_full_aggreement')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_no_disaggreement')
     parser.add_argument('--annotation', '-a', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_prelim')
+    parser.add_argument('--selected', '-s', type=str,
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main')
 
     args = parser.parse_args()
 
@@ -144,6 +141,10 @@ if __name__ == '__main__':
             df_annotation = pd.read_excel(file)
         else:
             continue
+        file = os.path.join(
+            args.selected,  language, "MAIN DE_ Cross-Cultural Hate Speech Detection in Memes (Antworten).xlsx")
+        df_selected = pd.read_excel(file)
+        ids_all_selected, _, _ = transform_data_into_pd(df_selected)
 
         ids_all, hate_binary_all, prolifc_ids = transform_data_into_pd(
             df_annotation)
@@ -162,36 +163,39 @@ if __name__ == '__main__':
             df = df[USER_IDS + ["Image ID"]]
         else:
             USER_IDS = prolifc_ids
+        df["Image ID"] = df["Image ID"].astype(str)
+        ids_all_selected = list(chain(*ids_all_selected))
+
+        # Filter selected images already
+        df = df[~df["Image ID"].isin(ids_all_selected)]
 
         rows_to_keep = df.drop(columns=['Image ID']).isna().all(axis=1)
         df = df[~rows_to_keep]
         # df = df.drop(columns=REMOVE_IDS)
         # Remove Skip Examples
-        df = df[~df["Image ID"].isin(SKIP_EXAMPLES.keys())]
+        df = df[~df["Image ID"].isin(SKIP_EXAMPLES)]
         non_hate_count = df.apply(lambda row: (row == 0).sum(), axis=1)
         hate_count = df.apply(lambda row: (row == 1).sum(), axis=1)
         idk_count = df.apply(lambda row: (row == -1).sum(), axis=1)
         df["non_hate_count"] = non_hate_count
         df["hate_count"] = hate_count
         df["idk_count"] = idk_count
-        df["total_valid_count"] = non_hate_count + hate_count + idk_count
-
-        df_subset = df[(df["non_hate_count"] == df["total_valid_count"]) | (
-            df["hate_count"] == df["total_valid_count"])].copy()
+        df["total_valid_count"] = non_hate_count + hate_count # + idk_count
+        # print(df[["non_hate_count", "hate_count", "idk_count", "total_valid_count"]])
+        df_subset = df[((df["non_hate_count"] == df["total_valid_count"]) | (
+            df["hate_count"] == df["total_valid_count"])) & (
+            df["total_valid_count"] != 0)].copy()
         df_subset['hatespeech'] = df_subset['hate_count'] == df_subset["total_valid_count"]
         pd.set_option('display.max_columns', None)  # Show all columns
         # Do not wrap the DataFrame display
         pd.set_option('display.expand_frame_repr', False)
+        print(df_subset[["Image ID", "non_hate_count", "hate_count", "idk_count", "total_valid_count"]])
 
         reliability_data = []
         for index, id in enumerate(USER_IDS):
             # if id in REMOVE_IDS:
             #    continue
             reliability_data.append(list(df_subset[id]))
-
-        alpha = krippendorff.alpha(
-            reliability_data=reliability_data, level_of_measurement="nominal")
-        print("Krippendorff's alpha: ", alpha)
 
         print(len(df_subset))
         df_subset = df_subset[["Image ID", "hatespeech"]]

@@ -12,7 +12,7 @@ from spacy.tokens import Doc
 
 LANGUAGES = ["en"]
 LANGUAGES = ["en", "de", "hi", "es", "zh"]
-LANGUAGES = ["hi", "es", "zh"]
+LANGUAGES = ["hi"]
 
 
 FONT_MAPPING = {
@@ -20,7 +20,7 @@ FONT_MAPPING = {
     "en": "Impact.ttf",
     "es": "Impact.ttf",
     "zh": "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/Arial-Unicode-Bold.ttf",
-    "hi": "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/Arial-Unicode-Bold.ttf",
+    "hi": "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/Arial-Unicode-Bold.ttf"
 }
 
 FONT_HEIGHT = {
@@ -29,6 +29,10 @@ FONT_HEIGHT = {
     "es": 45,
     "zh": 45,
     "hi": 45,
+}
+
+PADDING_BOTTOM = {
+    "hi": 40
 }
 
 # Load a blank SpaCy model
@@ -109,7 +113,10 @@ def make_meme(topString, bottomString, filename, output_file, worksheet, excel_i
     bottom_text_height = sum([get_text_size(line, font)[1]
                              for line in bottom_lines]) + 10 * (len(bottom_lines) - 1)
     # Padding from the bottom
-    bottom_text_position_y = image_size[1] - bottom_text_height - 25
+    if language in PADDING_BOTTOM.keys():
+        bottom_text_position_y = image_size[1] - bottom_text_height - PADDING_BOTTOM[language]
+    else:
+        bottom_text_position_y = image_size[1] - bottom_text_height - 25
 
     # Draw outlines and text for top lines
     outline_range = 2
@@ -161,7 +168,7 @@ if __name__ == '__main__':
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
     parser.add_argument('--output_folder', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_hindi')
     parser.add_argument('--test_run', '-t',
                         # This will set the default to False and set it to True if the flag is present
                         action='store_true',
@@ -195,6 +202,7 @@ if __name__ == '__main__':
             final_dataset, language + "_translation.xlsx")
         df_annotation = pd.read_excel(final_file)
         df_annotation = df_annotation.dropna(subset=['ID'])
+        # df_annotation = df_annotation[df_annotation["ID"] == -329162.0]
 
         # Remove zero-width space character (\u200b)
         df_annotation['Translation'] = df_annotation['Translation'].apply(

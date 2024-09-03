@@ -3,14 +3,14 @@ import os
 import random
 import shutil
 import pandas as pd
-from typing import List
 
 
 BATCH_SIZE = 16
 NUM_BATCHES = 25
 PAGE_SIZE = 6
 LANGUAGE = ["en", "de", "zh", "hi", "es"]
-LANGUAGE_FILTER = ["es"]
+# LANGUAGE_FILTER = ["en", "de", "zh", "hi", "es"]
+LANGUAGE_FILTER = ["zh"]
 random.seed(42)
 
 
@@ -92,9 +92,9 @@ if __name__ == '__main__':
     parser.add_argument('--hatespeech', '-s', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate/images')
     parser.add_argument('--output', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_nodisagreement')
     parser.add_argument('--filter', '-f', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_full_aggreement/PRELIMINARY ')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_no_disaggreement/PRELIMINARY ')
 
     args = parser.parse_args()
 
