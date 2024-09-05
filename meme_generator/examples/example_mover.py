@@ -2,9 +2,9 @@ import argparse
 import shutil
 import os
 
-LANGUAGES = ["zh"]
-NAME_FOLDER = ["de_", "en_", "es_", "hi_", "zh_"]
-MAX_LEN = 16
+LANGUAGES = ["en"]
+NAME_FOLDER = ["de", "en", "es", "hi", "zh"]
+MAX_LEN = 50
 
 
 def count_files_in_directory(directory):
@@ -32,14 +32,14 @@ if __name__ == '__main__':
     parser.add_argument('--image_folder', '-i', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/examples/output/user_')
     parser.add_argument('--output_path', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_nodisagreement_filtered/all/all_zh/')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_idk_filtered/en_main/')
     args = parser.parse_args()
 
     # TODO: 
     for language in NAME_FOLDER:
         image_folder = args.image_folder
         output_path = args.output_path
-        output_path = output_path + language + LANGUAGES[0]
+        output_path = output_path + language# + LANGUAGES[0]
         image_folder = image_folder + LANGUAGES[0]
         test = 0
         # Iterate through all files in the directory
@@ -70,7 +70,7 @@ if __name__ == '__main__':
 
                     if "1436.jpg" in instance_path:  # Asian
                         folder_index = min_indices[2]
-                    elif "1134290.jpg" in instance_path:  # French
+                    if "1134290.jpg" in instance_path:  # French
                         if sum_batch == MAX_LEN:
                             folder_index = min_indices[3]
                         else:

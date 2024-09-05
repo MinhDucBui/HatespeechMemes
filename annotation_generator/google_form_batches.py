@@ -5,12 +5,12 @@ import shutil
 import pandas as pd
 
 
-BATCH_SIZE = 16
+BATCH_SIZE = 12
 NUM_BATCHES = 25
-PAGE_SIZE = 6
-LANGUAGE = ["en", "de", "zh", "hi", "es"]
+PAGE_SIZE = 3
+LANGUAGE = ["es"]
 # LANGUAGE_FILTER = ["en", "de", "zh", "hi", "es"]
-LANGUAGE_FILTER = ["zh"]
+LANGUAGE_FILTER = ["es"]
 random.seed(42)
 
 
@@ -59,8 +59,8 @@ def restructure_list_of_lists(lists):
     flat_list = [item for sublist in lists for item in sublist]
 
     # Split the flattened list into chunks of 36 elements
-    restructured_list = [flat_list[i:i + 16]
-                         for i in range(0, len(flat_list), 16)]
+    restructured_list = [flat_list[i:i + BATCH_SIZE]
+                         for i in range(0, len(flat_list), BATCH_SIZE)]
 
     return restructured_list
 
@@ -92,9 +92,9 @@ if __name__ == '__main__':
     parser.add_argument('--hatespeech', '-s', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate/images')
     parser.add_argument('--output', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_nodisagreement')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_idk')
     parser.add_argument('--filter', '-f', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_no_disaggreement/PRELIMINARY ')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_idk_labels/PRELIMINARY ')
 
     args = parser.parse_args()
 
