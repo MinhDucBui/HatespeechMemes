@@ -171,11 +171,13 @@ def process_language_data(annotation_path):
         ties = (df_languages[language][language + '_hate_count']
                 == df_languages[language][language + '_nonhate_count'])
         print("Check for ties: ", sum(ties))
-        print(df_languages[language][ties])
         df_languages[language][MAPPING[language]] = (
             df_languages[language][language +
                                    '_hate_count'] > df_languages[language][language + '_nonhate_count']
         ).astype(int)
+        df_languages[language][MAPPING[language] + "_unanimously"] = \
+            (df_languages[language][language + '_hate_count'] == 3) | \
+            (df_languages[language][language + '_nonhate_count'] == 3)
         df_languages[language].drop(
             columns=[language + '_nonhate_count', language + '_hate_count'], inplace=True)
 
