@@ -1,6 +1,5 @@
 from qwen_vl_utils import process_vision_info
 from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
-import argparse
 import sys
 import os
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -9,6 +8,7 @@ sys.path.append(two_dirs_up)
 from vlm.inference.utils import pipeline_inference
 
 
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
 MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/3ca981c995b0ce691d85d8408216da11ff92f690"
 
 
@@ -51,20 +51,11 @@ def model_inference(prompt, model, processor):
         return_tensors="pt",
     )
     inputs = inputs.to("cuda")
-    output = model.generate(**inputs, max_new_tokens=10,
-                            do_sample=False, temperature=1.0)
+    output = model.generate(**inputs, max_new_tokens=10, do_sample=False)
     response_text = processor.decode(output[0][2:], skip_special_tokens=True)
     return response_text
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Meme dataset crawler')
-    parser.add_argument('--language', '-l', type=str, default='en')
-    parser.add_argument('--annotation', '-a', type=str,
-                        default='/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/prolific/hatespeech_main/')
-    parser.add_argument('--output_folder', '-o', type=str,
-                        default='/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/model_predictions')
-    args = parser.parse_args()
-
-    pipeline_inference(MODEL_PATH, args.language, args.annotation_path,
-                       args.output_folder, input_creator, model_creator, model_inference)
+    for language in LANGUAGES:
+        pipeline_inference(MODEL_PATH, language, input_creator, model_creator, model_inference)

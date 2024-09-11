@@ -10,7 +10,12 @@ sys.path.append(two_dirs_up)
 from annotation_evaluation.utils import process_language_data
 
 
+# Set Folders
+ANNOTATION_PATH = '/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/prolific/hatespeech_main/'
+OUTPUT_FOLDER = '/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/model_predictions'
 IMAGE_FOLDER = "/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/hatespeech_nonhate/images/"
+
+# Prompt Definition
 PROMPT_PREFIX = "Definition of Hate Speech:\n\nAny kind of communication [...], that attacks or uses pejorative or discriminatory language with reference to a person or a group on the basis of who they are, in other words, based on their religion, ethnicity, nationality, race, colour, descent, gender or other identity factor.\n\n"
 PROMPT_POSTFIX = ["\n\na: Hate\nb: Non-hate\n", "\n\na: Non-hate\nb: Hate"]
 PROMPTS = [
@@ -34,14 +39,17 @@ def name_output_file(model_path, output_folder, language):
     return output_file
 
 
-def pipeline_inference(model_path, language, annotation_path, output_folder, input_creator, model_creator, model_inference):
+def pipeline_inference(model_path, language, input_creator, model_creator, model_inference):
+
+    print("\n-----Processing {} Language\n".format(language))
+
     # Image list
     image_paths = []
     results_df = {"ID": [], "image_name": [], "prompt": [], "response": []}
     parent_dir = "/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/hatespeech_nonhate/images/" + language
-    df = process_language_data(annotation_path)
+    df = process_language_data(ANNOTATION_PATH)
 
-    for root, _, files in tqdm(os.walk(parent_dir), total=45):
+    for root, _, files in os.walk(parent_dir):
         for file in files:
             # Check if the file is an image by its extension
             if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')):
@@ -61,11 +69,13 @@ def pipeline_inference(model_path, language, annotation_path, output_folder, inp
         all_prompts, image_paths, model_path)
 
     # Model Creation
-    model = model_creator()
+    model = model_creator(model_path)
 
     # Main Inference Loop
-    results_df = {"ID": [], "image_name": [], "prompt": [], "response": []}
-    for idx, (model_input, image_path) in enumerate(zip(processed_inputs, image_paths)):
+    results_df = {"ID": [], "prompt": [], "response": []}
+    image_paths = [item for item in image_paths for _ in range(10)]
+    max_length = len(processed_inputs)
+    for idx, (model_input, image_path) in tqdm(enumerate(zip(processed_inputs, image_paths)), total=max_length):
         model_input["model"] = model
         model_input["processor"] = processor
         response_text = model_inference(**model_input)
@@ -78,5 +88,5 @@ def pipeline_inference(model_path, language, annotation_path, output_folder, inp
         results_df["response"].append(response_text)
 
     save_df = pd.DataFrame(results_df)
-    output_file = name_output_file(model_path, output_folder, language)
+    output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
     save_df.to_csv(output_file, index=False)

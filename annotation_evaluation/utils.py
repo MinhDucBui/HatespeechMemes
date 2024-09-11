@@ -145,7 +145,7 @@ def process_language_data(annotation_path):
     for language in LANGUAGES:
         for filter in FILTERS:
             file = os.path.join(
-                annotation_path, filter, f"MAIN {language}_ Cross-Cultural Hate Speech Detection in Memes (Antworten).xlsx"
+                annotation_path, filter, f"MAIN {language.upper()}_ Cross-Cultural Hate Speech Detection in Memes (Antworten).xlsx"
             )
             df_annotation = pd.read_excel(file)
             ids_all, hate_binary_all, prolific_ids = transform_data_into_pd(

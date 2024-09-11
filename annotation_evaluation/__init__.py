@@ -33,7 +33,7 @@ CATEGORIES = {
     }
 }
 
-
+"""
 path_folder = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate/images/en"
 
 mapping = {}
@@ -57,3 +57,4 @@ for category, subcategories in CATEGORIES.items():
 df = pd.DataFrame(
     rows, columns=["Category", "Subcategory", "Template", "Instance"])
 df.to_csv('/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/annotation_evaluation/category_mapping.csv', index=False)
+"""

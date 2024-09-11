@@ -1,4 +1,3 @@
-import argparse
 from transformers import AutoProcessor, LlavaForConditionalGeneration
 import torch
 from PIL import Image
@@ -11,7 +10,7 @@ from vlm.inference.utils import pipeline_inference
 
 
 MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-1.5-7b-hf/snapshots/95f2cf316249a98c11183f471ab76065c3e5f494"
-
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
 
 def input_creator(all_prompts, image_paths, model_path):
     # Input for model_inference()
@@ -30,7 +29,7 @@ def input_creator(all_prompts, image_paths, model_path):
             processed_prompt = processor.apply_chat_template(
                 conversation, add_generation_prompt=True)
             processed_prompts.append(
-                {"prompt": processed_prompt, image_path: image_path})
+                {"prompt": processed_prompt, "image_path": image_path})
 
     return processor, processed_prompts
 
@@ -56,13 +55,5 @@ def model_inference(image_path, prompt, model, processor):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Meme dataset crawler')
-    parser.add_argument('--language', '-l', type=str, default='en')
-    parser.add_argument('--annotation', '-a', type=str,
-                        default='/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/prolific/hatespeech_main/')
-    parser.add_argument('--output_folder', '-o', type=str,
-                        default='/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/model_predictions')
-    args = parser.parse_args()
-
-    pipeline_inference(MODEL_PATH, args.language, args.annotation_path,
-                       args.output_folder, input_creator, model_creator, model_inference)
+    for language in LANGUAGES:
+        pipeline_inference(MODEL_PATH, language, input_creator, model_creator, model_inference)
