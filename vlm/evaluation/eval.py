@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 tqdm.pandas()
 
-LANGUAGES = ["en"]
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
 MAPPING = {
     "en": "US",
     "de": "DE",
@@ -24,22 +24,33 @@ def extract_answer(response):
     response = response.lower()
     response = response.split("assistant: ")[-1]
     response = response.split("assistant\n")[-1]
+    response = response.split(" ")[0].split("\n")[0].strip()
     return response 
 
 def mapping_response(response):
     response = extract_answer(response)
 
-    a_response = ["a", "a: non-hate", "a: hate"]
-    b_response = ["b", "b: hate", "b: non-hate"]
+    a_response = ["a", "a:", "a: hate", "a.", "a:"]
+    b_response = ["b", "b:", "b:", "b)", "b:", "b."]
+
+    invalid_response = ["bustin", "busters.kerry", "a.kerry", 
+                        "busters.", "bhindiwereview", "bhaving",
+                        "bheye."]
     if response in a_response:
         return 0
     elif response in b_response:
         return 1
+    elif response in invalid_response:
+        return -1
     else:
         raise ValueError(f"Invalid response encountered: {response}")
 
 
 def process_response_to_hatespeech(row):
+    # Invalid:
+    if row['processed_answer'] == -1:
+        return -1
+
     # if response = 0 -> a. if response = 1 -> b.
     if row['prompt'] % 2 != 0:
         # b = hate
@@ -77,8 +88,12 @@ if __name__ == '__main__':
             if "models--" in folder:
                 print("\n" + folder)
                 for language in LANGUAGES:
+                    print("Language: {}".format(language))
                     folder_path = os.path.join(root, folder, "responses_" + language + ".csv")
-                    df_inference = pd.read_csv(folder_path)
+                    if os.path.exists(folder_path):
+                        df_inference = pd.read_csv(folder_path)
+                    else:
+                        continue
                     df_inference['answer'] = df_inference['response'].apply(extract_answer)
                     df_inference['processed_answer'] = df_inference['response'].apply(mapping_response)
                     df_inference['hate_prediction'] = df_inference.apply(process_response_to_hatespeech, axis=1)
@@ -93,3 +108,7 @@ if __name__ == '__main__':
 
                     # Accuracy
                     calc_acc(df_inference, MAPPING[language], "hate_prediction")
+
+                    # N Invalid Responses
+                    n_invalid = sum(df_inference["hate_prediction"] == -1)
+                    print("Invalid responses: {}".format(n_invalid))
