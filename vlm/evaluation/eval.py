@@ -70,13 +70,13 @@ def calc_acc(df, gt_name, predict_name):
     correct_predictions = (df[gt_name] == df[predict_name]).sum()
     total_predictions = len(df)
     accuracy = (correct_predictions / total_predictions) * 100
-    print(f"Accuracy: {accuracy:.2f}%")
+    print(f"Accuracy for GT Country {gt_name}: {accuracy:.2f}%")
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser('Meme dataset crawler')
-    parser.add_argument('--annotation', '-a', type=str, default='/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/prolific/hatespeech_main')
-    parser.add_argument('--model_inference', '-m', type=str, default='/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/model_predictions')
+    parser.add_argument('--annotation', '-a', type=str, default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main')
+    parser.add_argument('--model_inference', '-m', type=str, default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/model_predictions')
     args = parser.parse_args()
     df_gt = process_language_data(args.annotation)
     df_gt = df_gt.reset_index()
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     for root, dirs, files in os.walk(args.model_inference):
         for folder in dirs:
             if "models--" in folder:
-                print("\n" + folder)
+                print("\n--------------------" + folder + "-------------")
                 for language in LANGUAGES:
                     print("Language: {}".format(language))
                     folder_path = os.path.join(root, folder, "responses_" + language + ".csv")
@@ -107,8 +107,9 @@ if __name__ == '__main__':
                     df_inference = pd.merge(df_inference, df_gt, on="ID")
 
                     # Accuracy
-                    calc_acc(df_inference, MAPPING[language], "hate_prediction")
+                    for language_eval in LANGUAGES:
+                        calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
 
                     # N Invalid Responses
                     n_invalid = sum(df_inference["hate_prediction"] == -1)
-                    print("Invalid responses: {}".format(n_invalid))
+                    print("Invalid responses: {}\n".format(n_invalid))

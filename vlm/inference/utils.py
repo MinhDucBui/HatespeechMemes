@@ -11,9 +11,9 @@ from annotation_evaluation.utils import process_language_data
 
 
 # Set Folders
-ANNOTATION_PATH = '/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/prolific/hatespeech_main/'
-OUTPUT_FOLDER = '/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/model_predictions'
-IMAGE_FOLDER = "/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/hatespeech_nonhate/images/"
+ANNOTATION_PATH = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main'
+OUTPUT_FOLDER = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/model_predictions'
+IMAGE_FOLDER = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate_highres/images/"
 
 # Prompt Definition
 PROMPT_PREFIX = "Definition of Hate Speech:\n\nAny kind of communication [...], that attacks or uses pejorative or discriminatory language with reference to a person or a group on the basis of who they are, in other words, based on their religion, ethnicity, nationality, race, colour, descent, gender or other identity factor.\n\n"
@@ -46,7 +46,7 @@ def pipeline_inference(model_path, language, input_creator, model_creator, model
     # Image list
     image_paths = []
     results_df = {"ID": [], "image_name": [], "prompt": [], "response": []}
-    parent_dir = "/lustre/project/ki-topml/minbui/projects/MultiModalHatespeech/hatespeech_nonhate/images/" + language
+    parent_dir = IMAGE_FOLDER + language
     df = process_language_data(ANNOTATION_PATH)
 
     for root, _, files in os.walk(parent_dir):
@@ -86,6 +86,11 @@ def pipeline_inference(model_path, language, input_creator, model_creator, model
         index_prompt = idx % 10
         results_df["prompt"].append(index_prompt)
         results_df["response"].append(response_text)
+
+        if idx % 100 == 0:
+            save_df = pd.DataFrame(results_df)
+            output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
+            save_df.to_csv(output_file, index=False)
 
     save_df = pd.DataFrame(results_df)
     output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
