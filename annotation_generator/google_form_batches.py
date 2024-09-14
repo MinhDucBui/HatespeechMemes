@@ -5,9 +5,9 @@ import shutil
 import pandas as pd
 
 
-BATCH_SIZE = 12
+BATCH_SIZE = 16
 NUM_BATCHES = 25
-PAGE_SIZE = 3
+PAGE_SIZE = 1
 LANGUAGE = ["es"]
 # LANGUAGE_FILTER = ["en", "de", "zh", "hi", "es"]
 LANGUAGE_FILTER = ["es"]
@@ -92,9 +92,9 @@ if __name__ == '__main__':
     parser.add_argument('--hatespeech', '-s', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate/images')
     parser.add_argument('--output', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_idk')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/google_form_16_idk_new')
     parser.add_argument('--filter', '-f', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_idk_labels/PRELIMINARY ')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/filter_idk_labels_new/PRELIMINARY ')
 
     args = parser.parse_args()
 

@@ -4,9 +4,10 @@ import os
 from collections import Counter
 import pandas as pd
 
-LANGUAGES = ["en", "de", "es", "zh", "hi"]
-FILTERS = ["en", "de", "es", "hi", "zh", "2nd", "3rd_idk"]
-
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
+# FILTERS = ["en", "de", "es", "hi", "zh", "2nd", "3rd_idk"]
+FILTERS = ["en", "de", "es", "hi", "zh", "2nd", "4rd_idk"]
+NUM_ANNOTATORS = 5
 
 DONT_KNOW = None
 MAPPING = {
@@ -139,7 +140,7 @@ def transform_data_into_pd(df_annotation, language):
     return ids_all, hate_binary_all, prolifc_ids
 
 
-def process_language_data(annotation_path):
+def process_language_data(annotation_path, descriptive=False):
     df_languages = {language: [] for language in LANGUAGES}
 
     for language in LANGUAGES:
@@ -175,9 +176,10 @@ def process_language_data(annotation_path):
             df_languages[language][language +
                                    '_hate_count'] > df_languages[language][language + '_nonhate_count']
         ).astype(int)
-        df_languages[language][MAPPING[language] + "_unanimously"] = \
-            (df_languages[language][language + '_hate_count'] == 3) | \
-            (df_languages[language][language + '_nonhate_count'] == 3)
+        if descriptive:
+            df_languages[language][MAPPING[language] + "_unanimously"] = \
+                (df_languages[language][language + '_hate_count'] == NUM_ANNOTATORS) | \
+                (df_languages[language][language + '_nonhate_count'] == NUM_ANNOTATORS)
         df_languages[language].drop(
             columns=[language + '_nonhate_count', language + '_hate_count'], inplace=True)
 
@@ -197,6 +199,7 @@ def process_language_data(annotation_path):
     merged_df.set_index('ID', inplace=True)
 
     merged_df = merged_df.dropna(how="any")
+
     return merged_df
 
 
@@ -360,7 +363,17 @@ def process_language_data_descriptive(annotation_path, folder_demo):
         # Concatenate DataFrames
         merged_df = pd.concat(dfs)
         merged_df = merged_df.dropna()
-        # result = merged_df.groupby(['User ID']).value_counts()
+
+        # Count the number of entries per user
+        user_counts = merged_df["User ID"].value_counts()
+        min_entries = user_counts.min()
+        max_entries = user_counts.max()
+        mean_entries = user_counts.median()
+        print("----LANGUAGE: {}-----".format(language))
+        print("Minimum number of entries per user:", min_entries)
+        print("Maximum number of entries per user:", max_entries)
+        print("Mean number of entries per user:", mean_entries)
+
         # user_id = list(set(merged_df["User ID"]))
         df_user = pd.DataFrame(collect_user_data, columns=[
                                'User ID', 'Education', 'Political', 'Religion'])
@@ -380,7 +393,8 @@ def process_language_data_descriptive(annotation_path, folder_demo):
         labels = ['18-19', '20-29', '30-39', '40-49',
                   '50-59', '60-69', '70-79', '80-89']
         pd.set_option('display.max_columns', None)
-
+        # df_demo[df_demo['Age'].isna()])
+        # print(df_demo[df_demo['Age'] == "CONSENT_REVOKED"])
         df_demo['Age'] = df_demo['Age'].astype(int)
         df_demo['Age Group'] = pd.cut(
             df_demo['Age'], bins=bins, labels=labels, right=True, include_lowest=True)

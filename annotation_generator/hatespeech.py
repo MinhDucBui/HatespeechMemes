@@ -12,7 +12,7 @@ from spacy.tokens import Doc
 
 LANGUAGES = ["en"]
 LANGUAGES = ["en", "de", "hi", "es", "zh"]
-LANGUAGES = ["hi"]
+# LANGUAGES = ["hi"]
 
 
 FONT_MAPPING = {
@@ -55,7 +55,6 @@ def resize_image(filename, new_width, new_height):
 
     # Resize the image
     resized_img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-
     return resized_img
 
 
@@ -67,8 +66,8 @@ def make_meme(topString, bottomString, filename, output_file, worksheet, excel_i
 
     # Open the image and get its size
     img = Image.open(filename)
-    new_width = 600
-    new_height = 600
+    new_width = 512
+    new_height = 512
 
     img = resize_image(filename, new_width, new_height)
     image_size = img.size
@@ -114,7 +113,8 @@ def make_meme(topString, bottomString, filename, output_file, worksheet, excel_i
                              for line in bottom_lines]) + 10 * (len(bottom_lines) - 1)
     # Padding from the bottom
     if language in PADDING_BOTTOM.keys():
-        bottom_text_position_y = image_size[1] - bottom_text_height - PADDING_BOTTOM[language]
+        bottom_text_position_y = image_size[1] - \
+            bottom_text_height - PADDING_BOTTOM[language]
     else:
         bottom_text_position_y = image_size[1] - bottom_text_height - 25
 
@@ -146,9 +146,9 @@ def make_meme(topString, bottomString, filename, output_file, worksheet, excel_i
         draw.text((text_position_x, text_position_y),
                   line, (255, 255, 255), font=font)
     # Define the scaling factor (e.g., reduce by 50%)
-    scale_factor = 0.4
-    new_size = (int(img.width * scale_factor), int(img.height * scale_factor))
-    img = img.resize(new_size, Image.Resampling.LANCZOS)
+    # scale_factor = 0.4
+    # new_size = (int(img.width * scale_factor), int(img.height * scale_factor))
+    # img = img.resize(new_size, Image.Resampling.LANCZOS)
     img.save(output_file, 'JPEG')
 
     # Convert the dataframe to an XlsxWriter Excel object.
@@ -157,6 +157,41 @@ def make_meme(topString, bottomString, filename, output_file, worksheet, excel_i
     worksheet.insert_image('C' + str(excel_index), output_file)
     # Close the Pandas Excel writer and output the Excel file.
     # das
+
+
+def process_translations(final_dataset, language):
+    # Load the text file into a DataFrame
+    final_file = os.path.join(
+        final_dataset, language + "_translation.xlsx")
+    df_annotation = pd.read_excel(final_file)
+    df_annotation = df_annotation.dropna(subset=['ID'])
+    # df_annotation = df_annotation[df_annotation["ID"] == -329162.0]
+
+    # Remove zero-width space character (\u200b)
+    df_annotation['Translation'] = df_annotation['Translation'].apply(
+        lambda x: x if pd.isna(x) else x.replace('\u200b', ''))
+    df_annotation['Correct Translation'] = df_annotation['Correct Translation'].apply(
+        lambda x: x if pd.isna(x) else x.replace('\u200b', ''))
+    # df_annotation = df_annotation[df_annotation['ID'].isin([56603606, 14106131, 11807098, 44355237])]
+    # df_annotation = df_annotation[df_annotation['ID'].isin([72039904])]
+    df_annotation = df_annotation.drop_duplicates()
+    df_annotation = df_annotation.sample(frac=1).reset_index(drop=True)
+
+    # Create a mask for rows where 'Correct Translation' is not empty
+    non_empty = pd.notna(df_annotation['Correct Translation'])
+    df_annotation.loc[non_empty,
+                      'Translation'] = df_annotation.loc[non_empty, 'Correct Translation']
+    if "2nd: Correct Translation" in df_annotation.keys():
+        non_empty = pd.notna(df_annotation['2nd: Correct Translation'])
+        df_annotation.loc[non_empty, 'Translation'] = df_annotation.loc[non_empty,
+                                                                        '2nd: Correct Translation']
+
+    if "3nd: Correct Translation" in df_annotation.keys():
+        non_empty = pd.notna(df_annotation['3nd: Correct Translation'])
+        df_annotation.loc[non_empty, 'Translation'] = df_annotation.loc[non_empty,
+                                                                        '3nd: Correct Translation']
+
+    return df_annotation
 
 
 if __name__ == '__main__':
@@ -168,7 +203,7 @@ if __name__ == '__main__':
     parser.add_argument('--generate_folder', '-g', type=str,
                         default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/generated_memes')
     parser.add_argument('--output_folder', '-o', type=str,
-                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_hindi')
+                        default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/test_hate')
     parser.add_argument('--test_run', '-t',
                         # This will set the default to False and set it to True if the flag is present
                         action='store_true',
@@ -190,6 +225,8 @@ if __name__ == '__main__':
                    'caption_translated',
                    'caption_original']
 
+        df_annotation = process_translations(final_dataset, language)
+
         # Load the text file into a DataFrame
         df_caption = pd.read_csv(os.path.join(
             generate_folder, "caption_translation",  "en.txt"), sep='\t', names=headers)
@@ -197,22 +234,6 @@ if __name__ == '__main__':
 
         headers = ['template', 'instance_id',
                    'caption_translated', 'caption_original']
-        # Load the text file into a DataFrame
-        final_file = os.path.join(
-            final_dataset, language + "_translation.xlsx")
-        df_annotation = pd.read_excel(final_file)
-        df_annotation = df_annotation.dropna(subset=['ID'])
-        # df_annotation = df_annotation[df_annotation["ID"] == -329162.0]
-
-        # Remove zero-width space character (\u200b)
-        df_annotation['Translation'] = df_annotation['Translation'].apply(
-            lambda x: x if pd.isna(x) else x.replace('\u200b', ''))
-        df_annotation['Correct Translation'] = df_annotation['Correct Translation'].apply(
-            lambda x: x if pd.isna(x) else x.replace('\u200b', ''))
-        # df_annotation = df_annotation[df_annotation['ID'].isin([56603606, 14106131, 11807098, 44355237])]
-        # df_annotation = df_annotation[df_annotation['ID'].isin([72039904])]
-        df_annotation = df_annotation.drop_duplicates()
-        df_annotation = df_annotation.sample(frac=1).reset_index(drop=True)
         instances_processing = list(df_annotation["ID"])
 
         # Create a Pandas Excel writer using XlsxWriter as the engine.
@@ -221,20 +242,6 @@ if __name__ == '__main__':
                         'Hate Speech (=1) or Non-Hate Speech (=0)', 'Comments']
         df_hatespeech = pd.DataFrame(columns=column_names)
         df_hatespeech["ID"] = instances_processing
-
-        # Create a mask for rows where 'Correct Translation' is not empty
-        non_empty = pd.notna(df_annotation['Correct Translation'])
-        df_annotation.loc[non_empty,
-                          'Translation'] = df_annotation.loc[non_empty, 'Correct Translation']
-        if "2nd: Correct Translation" in df_annotation.keys():
-            non_empty = pd.notna(df_annotation['2nd: Correct Translation'])
-            df_annotation.loc[non_empty, 'Translation'] = df_annotation.loc[non_empty,
-                                                                            '2nd: Correct Translation']
-
-        if "3nd: Correct Translation" in df_annotation.keys():
-            non_empty = pd.notna(df_annotation['3nd: Correct Translation'])
-            df_annotation.loc[non_empty, 'Translation'] = df_annotation.loc[non_empty,
-                                                                            '3nd: Correct Translation']
         df_hatespeech["Caption"] = df_annotation["Translation"]
         df_hatespeech['Caption'] = df_hatespeech['Caption'].apply(
             lambda x: x if pd.isna(x) else x.replace('\u200b', ''))

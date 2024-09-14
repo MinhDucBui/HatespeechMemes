@@ -94,7 +94,11 @@ if __name__ == '__main__':
         return pd.crosstab(df[attribute], df['hatespeech'], margins=False)
 
     contingency_country = create_contingency_table(merged_df, 'Nationality')
-
+    # print(contingency_country)
+    # diff = -5
+    # count_ = "US"
+    # contingency_country.loc[count_][0] = contingency_country.loc[count_][0] - diff
+    # contingency_country.loc[count_][1] = contingency_country.loc[count_][1] + diff
     row_sums = contingency_country.sum(axis=1)
     normalized_df = contingency_country.div(row_sums, axis=0)
 

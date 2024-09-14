@@ -2,20 +2,24 @@ import argparse
 import pandas as pd
 import krippendorff
 import os
-from utils import transform_data_into_pd, SKIP_EXAMPLES, FILTERS
-
+from utils import transform_data_into_pd, process_language_data, SKIP_EXAMPLES, FILTERS
+import numpy as np
 
 USER_IDS = "all"
 
-print(USER_IDS)
+# Spanish: "613ee464768f4be3b5ff3eaa"
+#USER_IDS = ["5f3300554188a70deea55136", "662fb34a856a8e0e40696cc9", "5f2ef7740f87702b99055397", 
+#            "613f8b830830d428fc93696d", "6577257c0f74c02eed5453c8"
+#]
 
 
 LANGUAGES = [
-    "hi", "MAIN "
+    "en", "MAIN "
 ]
+# FILTERS = ["zh"]
 
 
-LENGTH = 3
+LENGTH = 5
 
 
 def calculate_0_1s(df):
@@ -43,6 +47,7 @@ if __name__ == '__main__':
 
     all_dfs = []
     all_prolifc_ids = []
+    process_language_data(args.annotation)
     for filter in FILTERS:
         file = os.path.join(args.annotation + filter, prefix +
                             f"{language}_ Cross-Cultural Hate Speech Detection in Memes (Antworten).xlsx")
@@ -67,13 +72,14 @@ if __name__ == '__main__':
         if USER_IDS == "all":
             USER_IDS = prolifc_ids
         all_prolifc_ids = all_prolifc_ids + USER_IDS
-        print(df)
         df = df[USER_IDS + ["ID"]]
         all_dfs.append(df)
         USER_IDS = "all"
 
     USER_IDS = all_prolifc_ids
     df = pd.concat(all_dfs, ignore_index=True)
+
+    df = df.replace({None: np.nan})
 
     # Identify rows where all specified columns are NaN
     rows_to_drop = df[USER_IDS].isna().all(axis=1)
@@ -89,10 +95,14 @@ if __name__ == '__main__':
     # Display all columns in a DataFrame
     pd.set_option('display.max_columns', None)
     print(df_control)
-    print("\nControl:\n", overlap)
+    # print("\nControl:\n", overlap)
 
     # Skip Examples
+
     df = df[~df["ID"].isin(SKIP_EXAMPLES)]
+
+    df = df.pivot_table(index='ID', aggfunc='first')
+    df = df.reset_index()
 
     reliability_data = []
 
@@ -108,10 +118,12 @@ if __name__ == '__main__':
             USER_IDS.append("hatespeech_" + str(i))
         df = df.drop(columns=['hatespeech', 'Image ID'])
 
+    duplicates = df[df.duplicated(subset='ID', keep=False)]
+    print("DUPLICATES: ", len(duplicates["ID"]))
     for index, id in enumerate(USER_IDS):
         reliability_data.append(list(df[id]))
-    print("Total Amount of People: {}".format(len(reliability_data)))
     print("Total Amount of Data: {}".format(len(reliability_data[0])))
+    print("Total Amount of Data: {}".format(len(reliability_data[1])))
 
     df = df.set_index('ID')
 
@@ -122,10 +134,11 @@ if __name__ == '__main__':
     # for column, (zero_count, one_count) in zip(df.columns, zip(count_0s, count_1s)):
     #    print(
     #        f"{column}: 0s = {zero_count}, 1s = {one_count}, -1s = {36-zero_count-one_count}")
+
     alpha = krippendorff.alpha(
         reliability_data=reliability_data, level_of_measurement="nominal")
     print("\nKrippendorff's alpha: ", alpha)
-    print("Num People: ", len(df.keys()))
+    print("Num People: ", len(set(list(df.keys()))))
 
     df = calculate_0_1s(df)
 
