@@ -13,7 +13,7 @@ LANGUAGES = ["en", "de", "es", "hi", "zh"]
 MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-vicuna-7b-hf/snapshots/89b0f2ea28da2e62d7cfda173a400d2ad82a1c8e"
 
 
-def input_creator(all_prompts, image_paths, model_path):
+def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption):
     # Input for model_inference()
     processor = LlavaNextProcessor.from_pretrained(model_path)
     processed_prompts = []

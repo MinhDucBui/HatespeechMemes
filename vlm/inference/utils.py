@@ -8,13 +8,10 @@ two_dirs_up = os.path.abspath(os.path.join(current_script_dir, '..', '..'))
 sys.path.append(two_dirs_up)
 
 from annotation_evaluation.utils import process_language_data
+from vlm.inference.local_paths import ANNOTATION_PATH, OUTPUT_FOLDER, IMAGE_FOLDER, CAPTION_FOLDER
 
-
-# Set Folders
-ANNOTATION_PATH = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main'
-OUTPUT_FOLDER = '/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/model_predictions'
-IMAGE_FOLDER = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/hatespeech_nonhate_highres/images/"
-CAPTION_FOLDER = "/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/translation_final/done/with_non_hate_old"
+# Caption
+ADD_CAPTION = True
 
 # Prompt Definition
 PROMPT_NUMBER = 4
@@ -76,7 +73,7 @@ def process_translations(final_dataset, language):
     return df_annotation
 
 
-def pipeline_inference(model_path, language, input_creator, model_creator, model_inference, add_caption=False):
+def pipeline_inference(model_path, language, input_creator, model_creator, model_inference, add_caption=ADD_CAPTION):
 
     print("\n-----Processing {} Language\n".format(language))
 

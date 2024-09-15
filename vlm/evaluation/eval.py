@@ -5,8 +5,8 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 two_dirs_up = os.path.abspath(os.path.join(current_script_dir, '..', '..'))
 sys.path.append(two_dirs_up)
 
+from vlm.inference.local_paths import ANNOTATION_PATH, MODEL_PREDICTIONS
 from annotation_evaluation.utils import process_language_data
-import argparse
 from tqdm import tqdm
 
 tqdm.pandas()
@@ -74,16 +74,13 @@ def calc_acc(df, gt_name, predict_name):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('Meme dataset crawler')
-    parser.add_argument('--annotation', '-a', type=str, default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/prolific_annotations/hatespeech_main')
-    parser.add_argument('--model_inference', '-m', type=str, default='/Users/duc/Desktop/Projects/Ongoing/MultiModalMemes/dataset/annotation/model_predictions')
-    args = parser.parse_args()
-    df_gt = process_language_data(args.annotation)
+    
+    df_gt = process_language_data(ANNOTATION_PATH)
     df_gt = df_gt.reset_index()
     df_gt["ID"] = df_gt["ID"].astype(str)
 
     # Loop over all folders inside the parent folder
-    for root, dirs, files in os.walk(args.model_inference):
+    for root, dirs, files in os.walk(MODEL_PREDICTIONS):
         for folder in dirs:
             if "models--" in folder:
                 print("\n--------------------" + folder + "-------------")

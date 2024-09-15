@@ -12,17 +12,25 @@ LANGUAGES = ["en", "de", "es", "hi", "zh"]
 MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/3ca981c995b0ce691d85d8408216da11ff92f690"
 
 
-def input_creator(all_prompts, image_paths, model_path):
+def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption):
     # Input for model_inference()
     processor = AutoProcessor.from_pretrained(model_path)
     processed_prompts = []
     for image_path in image_paths:
         for raw_prompt in all_prompts:
+            if add_caption:
+                id_image = image_path.split("/")[-1].split(".jpg")[0]
+                caption = df_captions[df_captions["ID"]
+                                      == id_image]["Translation"].iloc[0]
+                text_prompt = {"type": "text", "text": raw_prompt.format(str(caption))}
+            else:
+                text_prompt = {"type": "text", "text": raw_prompt}
+
             conversation = [{
                 "role": "user",
                 "content": [
                     {"type": "image", "image": image_path},
-                    {"type": "text", "text": raw_prompt},
+                    text_prompt,
                 ],
             },
             ]
