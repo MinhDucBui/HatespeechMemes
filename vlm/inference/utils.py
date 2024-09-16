@@ -12,11 +12,12 @@ from vlm.inference.local_paths import ANNOTATION_PATH, OUTPUT_FOLDER, IMAGE_FOLD
 
 # Caption
 ADD_CAPTION = True
+PREFIX = "test"
 
 # Prompt Definition
 PROMPT_NUMBER = 4
 PROMPT_PREFIX = "Definition of Hate Speech:\n\nAny kind of communication [...], that attacks or uses pejorative or discriminatory language with reference to a person or a group on the basis of who they are, in other words, based on their religion, ethnicity, nationality, race, colour, descent, gender or other identity factor.\n\n"
-PROMPT_POSTFIX = ["\n\na: Hate\nb: Non-hate\n", "\n\na: Non-hate\nb: Hate"]
+PROMPT_POSTFIX = ["\n\na: Hate\nb: Non-hate\n", "\n\na: Non-hate\nb: Hate\n"]
 PROMPTS = [
     "Answer if this meme is hate or not with a single alphabet letter among given answer choices a and b.",
     "Given a meme from online, answer if it is 'Hate Speech' or 'Non-Hate Speech'. Answer with only one single alphabet between 'a' and 'b', with no other description.",
@@ -24,7 +25,7 @@ PROMPTS = [
     # "Do you think this is a hate speech? Answer with only one single alphabet between 'a' and 'b', with no other description.",
     # "Would you consider this meme as a hate speech? Give an answer in a single alphabet only.",
 ]
-PROMPT_CAPTION = "Caption inside the meme image: '{}'\n"
+PROMPT_CAPTION = "\nCaption inside the meme image: '{}'\nChoose:"
 
 
 def get_device_map() -> str:
@@ -33,6 +34,10 @@ def get_device_map() -> str:
 
 def name_output_file(model_path, output_folder, language):
     model_postfix = model_path.split("/")[-3]
+    if ADD_CAPTION:
+        model_postfix = model_postfix + "_caption"
+    if PREFIX:
+        model_postfix = PREFIX + model_postfix
     output_folder = os.path.join(output_folder, model_postfix)
     os.makedirs(output_folder, exist_ok=True)
     output_file = os.path.join(output_folder, f"responses_{language}.csv")
@@ -73,69 +78,69 @@ def process_translations(final_dataset, language):
     return df_annotation
 
 
-def pipeline_inference(model_path, language, input_creator, model_creator, model_inference, add_caption=ADD_CAPTION):
-
-    print("\n-----Processing {} Language\n".format(language))
-
-    # Load Captions
-    df_captions = process_translations(CAPTION_FOLDER, language)
-    df_captions["ID"] = df_captions["ID"].astype(int).astype(str)
-
-    # Image list
-    image_paths = []
-    results_df = {"ID": [], "image_name": [], "prompt": [], "response": []}
-    parent_dir = IMAGE_FOLDER + language
-    df = process_language_data(ANNOTATION_PATH)
-
-    for root, _, files in os.walk(parent_dir):
-        for file in files:
-            # Check if the file is an image by its extension
-            if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')):
-                image_path = os.path.join(root, file)
-                image_path_check = str(image_path.split("/")[-1].split(".")[0])
-                if image_path_check in list(df.index):
-                    image_paths.append(image_path)
-
-    # All prompts
-    all_prompts = []
-    for prompt in PROMPTS:
-        for postfix in PROMPT_POSTFIX:
-            if add_caption:
-                all_prompts.append(PROMPT_CAPTION + PROMPT_PREFIX + prompt + postfix)
-            else:
-                all_prompts.append(PROMPT_PREFIX + prompt + postfix)
-
-    # Prompt Creation
-    processor, processed_inputs = input_creator(
-        all_prompts, image_paths, model_path, df_captions, add_caption=add_caption)
-
+def pipeline_inference(model_path, languages, input_creator, model_creator, model_inference, add_caption=ADD_CAPTION):
     # Model Creation
     model = model_creator(model_path)
 
-    # Main Inference Loop
-    results_df = {"ID": [], "prompt": [], "response": []}
-    image_paths = [item for item in image_paths for _ in range(PROMPT_NUMBER)]
-    max_length = len(processed_inputs)
-    for idx, (model_input, image_path) in tqdm(enumerate(zip(processed_inputs, image_paths)), total=max_length):
-        #if idx < 200:
-        #    continue
+    for language in languages:
+        print("\n-----Processing {} Language\n".format(language))
 
-        model_input["model"] = model
-        model_input["processor"] = processor
-        response_text = model_inference(**model_input)
+        # Load Captions
+        df_captions = process_translations(CAPTION_FOLDER, language)
+        df_captions["ID"] = df_captions["ID"].astype(int).astype(str)
 
-        # Collect
-        id_image = str(image_path.split("/")[-1].split(".")[0])
-        results_df["ID"].append(id_image)
-        index_prompt = idx % PROMPT_NUMBER
-        results_df["prompt"].append(index_prompt)
-        results_df["response"].append(response_text)
+        # Image list
+        image_paths = []
+        results_df = {"ID": [], "image_name": [], "prompt": [], "response": []}
+        parent_dir = IMAGE_FOLDER + language
+        df = process_language_data(ANNOTATION_PATH)
 
-        if idx % 100 == 0:
-            save_df = pd.DataFrame(results_df)
-            output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
-            save_df.to_csv(output_file, index=False)
+        for root, _, files in os.walk(parent_dir):
+            for file in files:
+                # Check if the file is an image by its extension
+                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')):
+                    image_path = os.path.join(root, file)
+                    image_path_check = str(image_path.split("/")[-1].split(".")[0])
+                    if image_path_check in list(df.index):
+                        image_paths.append(image_path)
 
-    save_df = pd.DataFrame(results_df)
-    output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
-    save_df.to_csv(output_file, index=False)
+        # All prompts
+        all_prompts = []
+        for prompt in PROMPTS:
+            for postfix in PROMPT_POSTFIX:
+                if add_caption:
+                    all_prompts.append(PROMPT_PREFIX + prompt + PROMPT_CAPTION + postfix )
+                else:
+                    all_prompts.append(PROMPT_PREFIX + prompt + postfix)
+
+        # Prompt Creation
+        processor, processed_inputs = input_creator(
+            all_prompts, image_paths, model_path, df_captions, add_caption=add_caption)
+
+        # Main Inference Loop
+        results_df = {"ID": [], "prompt": [], "response": []}
+        image_paths = [item for item in image_paths for _ in range(PROMPT_NUMBER)]
+        max_length = len(processed_inputs)
+        for idx, (model_input, image_path) in tqdm(enumerate(zip(processed_inputs, image_paths)), total=max_length):
+            #if idx < 200:
+            #    continue
+
+            model_input["model"] = model
+            model_input["processor"] = processor
+            response_text = model_inference(**model_input)
+
+            # Collect
+            id_image = str(image_path.split("/")[-1].split(".")[0])
+            results_df["ID"].append(id_image)
+            index_prompt = idx % PROMPT_NUMBER
+            results_df["prompt"].append(index_prompt)
+            results_df["response"].append(response_text)
+
+            if idx % 100 == 0:
+                save_df = pd.DataFrame(results_df)
+                output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
+                save_df.to_csv(output_file, index=False)
+
+        save_df = pd.DataFrame(results_df)
+        output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
+        save_df.to_csv(output_file, index=False)

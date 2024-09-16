@@ -20,6 +20,41 @@ MAPPING = {
     "zh": "CN"
 }
 
+def latex_table(latex_preds):
+
+    if "en" in latex_preds:
+        english = latex_preds["en"]
+    else:
+        english = {"US": "--", "DE": "--", "MX": "--", "CN": "--", "IN": "--"}
+    if "de" in latex_preds:
+        german = latex_preds["de"]
+    else:
+        german = {"US": "--", "DE": "--", "MX": "--", "CN": "--", "IN": "--"}
+    if "es" in latex_preds:
+        spanish = latex_preds["es"]
+    else:
+        spanish = {"US": "--", "DE": "--", "MX": "--", "CN": "--", "IN": "--"}
+    if "hi" in latex_preds:
+        hindi = latex_preds["hi"]
+    else:
+        hindi = {"US": "--", "DE": "--", "MX": "--", "CN": "--", "IN": "--"}
+    if "zh" in latex_preds:
+        mandarin = latex_preds["zh"]
+    else:
+        mandarin = {"US": "--", "DE": "--", "MX": "--", "CN": "--", "IN": "--"}
+
+
+    table = f"""
+    English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\
+    German    & {german["US"]} & {german["DE"]} & {german["MX"]} & {german["IN"]} & {german["CN"]} \\\\
+    Spanish   & {spanish["US"]} & {spanish["DE"]} & {spanish["MX"]} & {spanish["IN"]} & {spanish["CN"]} \\\\
+    Hindi     & {hindi["US"]} & {hindi["DE"]} & {hindi["MX"]} & {hindi["IN"]} & {hindi["CN"]} \\\\
+    Mandarin  & {mandarin["US"]} & {mandarin["DE"]} & {mandarin["MX"]} & {mandarin["IN"]} & {mandarin["CN"]} \\\\
+    """
+
+    print(table)
+    
+
 def extract_answer(response):
     response = response.lower()
     response = response.split("assistant: ")[-1]
@@ -31,11 +66,14 @@ def mapping_response(response):
     response = extract_answer(response)
 
     a_response = ["a", "a:", "a: hate", "a.", "a:"]
-    b_response = ["b", "b:", "b:", "b)", "b:", "b."]
+    b_response = ["b", "b:", "b:", "b)", "b:", "b.", "a)"]
 
     invalid_response = ["bustin", "busters.kerry", "a.kerry", 
                         "busters.", "bhindiwereview", "bhaving",
-                        "bheye."]
+                        "bheye.", "africaarabi.", "bilder.", "banner",
+                        "banner", "bhaving", "bust", "bubble",
+                        "b.19999999", "bietehrt.", "a120.", "ademon", "b20.",
+                        "the"]
     if response in a_response:
         return 0
     elif response in b_response:
@@ -67,10 +105,12 @@ def process_response_to_hatespeech(row):
 
 
 def calc_acc(df, gt_name, predict_name):
+    # df = df[df[predict_name] != -1]
     correct_predictions = (df[gt_name] == df[predict_name]).sum()
     total_predictions = len(df)
     accuracy = (correct_predictions / total_predictions) * 100
-    print(f"Accuracy for GT Country {gt_name}: {accuracy:.2f}%")
+    # print(f"Accuracy for GT Country {gt_name}: {accuracy:.2f}%")
+    return accuracy
 
 
 if __name__ == '__main__':
@@ -84,8 +124,9 @@ if __name__ == '__main__':
         for folder in dirs:
             if "models--" in folder:
                 print("\n--------------------" + folder + "-------------")
+                latex_preds = {}
                 for language in LANGUAGES:
-                    print("Language: {}".format(language))
+                    # print("Language: {}".format(language))
                     folder_path = os.path.join(root, folder, "responses_" + language + ".csv")
                     if os.path.exists(folder_path):
                         df_inference = pd.read_csv(folder_path)
@@ -103,10 +144,14 @@ if __name__ == '__main__':
                     df_inference["ID"] = df_inference["ID"].astype(str)
                     df_inference = pd.merge(df_inference, df_gt, on="ID")
 
+                    latex_preds[language] = {}
                     # Accuracy
                     for language_eval in LANGUAGES:
-                        calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
+                        accuracy = calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
+                        latex_preds[language][MAPPING[language_eval]] = round(accuracy, 1)
 
                     # N Invalid Responses
                     n_invalid = sum(df_inference["hate_prediction"] == -1)
-                    print("Invalid responses: {}\n".format(n_invalid))
+                    print("Invalid responses: {}".format(n_invalid))
+
+                latex_table(latex_preds)

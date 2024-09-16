@@ -9,21 +9,34 @@ sys.path.append(two_dirs_up)
 
 from vlm.inference.utils import pipeline_inference
 
-LANGUAGES = ["en", "de", "es", "hi", "zh"]
-MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-vicuna-7b-hf/snapshots/89b0f2ea28da2e62d7cfda173a400d2ad82a1c8e"
+LANGUAGES = ["de", "es", "hi", "zh"]
+MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-34b-hf/snapshots/66b6feb83d0249dc9f31a24bd3abfb63f90e41aa"
+MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-vicuna-13b-hf/snapshots/e66fcaaa7d502b1037c8465375bb67f4c33758dd"
 
 
 def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption):
     # Input for model_inference()
     processor = LlavaNextProcessor.from_pretrained(model_path)
+
+    processor.patch_size = 14
+    processor.vision_feature_select_strategy = "default"
+
     processed_prompts = []
     for image_path in image_paths:
         for raw_prompt in all_prompts:
+            if add_caption:
+                id_image = image_path.split("/")[-1].split(".jpg")[0]
+                caption = df_captions[df_captions["ID"]
+                                      == id_image]["Translation"].iloc[0]
+                text_prompt = {"type": "text", "text": raw_prompt.format(str(caption))}
+            else:
+                text_prompt = {"type": "text", "text": raw_prompt}
+            
             conversation = [{
                 "role": "user",
                 "content": [
+                    text_prompt,
                     {"type": "image"},
-                    {"type": "text", "text": raw_prompt},
                 ],
             },
             ]
@@ -54,5 +67,4 @@ def model_inference(image_path, prompt, model, processor):
 
 
 if __name__ == '__main__':
-    for language in LANGUAGES:
-        pipeline_inference(MODEL_PATH, language, input_creator, model_creator, model_inference)
+    pipeline_inference(MODEL_PATH, LANGUAGES, input_creator, model_creator, model_inference)

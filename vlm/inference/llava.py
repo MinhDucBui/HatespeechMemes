@@ -55,5 +55,4 @@ def model_inference(image_path, prompt, model, processor):
 
 
 if __name__ == '__main__':
-    for language in LANGUAGES:
-        pipeline_inference(MODEL_PATH, language, input_creator, model_creator, model_inference)
+    pipeline_inference(MODEL_PATH, LANGUAGES, input_creator, model_creator, model_inference)
