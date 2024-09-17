@@ -4,6 +4,7 @@ import os
 from collections import Counter
 import pandas as pd
 
+# USA & Germany & Mexico & India & China
 LANGUAGES = ["en", "de", "es", "hi", "zh"]
 # FILTERS = ["en", "de", "es", "hi", "zh", "2nd", "3rd_idk"]
 FILTERS = ["en", "de", "es", "hi", "zh", "2nd", "4rd_idk"]
@@ -393,8 +394,8 @@ def process_language_data_descriptive(annotation_path, folder_demo):
         labels = ['18-19', '20-29', '30-39', '40-49',
                   '50-59', '60-69', '70-79', '80-89']
         pd.set_option('display.max_columns', None)
-        # df_demo[df_demo['Age'].isna()])
-        # print(df_demo[df_demo['Age'] == "CONSENT_REVOKED"])
+        print(df_demo[df_demo['Age'].isna()])
+        print(df_demo[df_demo['Age'] == "CONSENT_REVOKED"])
         df_demo['Age'] = df_demo['Age'].astype(int)
         df_demo['Age Group'] = pd.cut(
             df_demo['Age'], bins=bins, labels=labels, right=True, include_lowest=True)

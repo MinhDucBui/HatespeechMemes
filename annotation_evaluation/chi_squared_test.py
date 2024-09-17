@@ -4,6 +4,8 @@ from itertools import combinations
 import numpy as np
 from scipy.stats import chi2_contingency
 from utils import process_language_data
+from statsmodels.stats.contingency_tables import mcnemar
+from itertools import combinations
 
 
 def get_latex_table(df_counts, df_percent):
@@ -94,7 +96,7 @@ if __name__ == '__main__':
         return pd.crosstab(df[attribute], df['hatespeech'], margins=False)
 
     contingency_country = create_contingency_table(merged_df, 'Nationality')
-    # print(contingency_country)
+    print(contingency_country)
     # diff = -5
     # count_ = "US"
     # contingency_country.loc[count_][0] = contingency_country.loc[count_][0] - diff
@@ -118,5 +120,20 @@ if __name__ == '__main__':
         else:
             print(
                 f'There are no significant disparities in annotations across {attribute} (p = {p_value})')
+
+    # Get list of all countries
+    countries = contingency_country.index
+
+    # Generate all unique country pairs
+    country_pairs = combinations(countries, 2)
+
+    for country1, country2 in country_pairs:
+        # Extract data for the pair of countries
+        data = contingency_country.loc[[country1, country2]].values
+        print(f"Contingency table for {country1} and {country2}:\n{data}")
+
+        # Perform McNemar's Test
+        result = mcnemar(data, exact=False)
+        print(f"McNemar's Test result for {country1} and {country2}: {result}\n")
 
     get_latex_table(contingency_country, normalized_df)

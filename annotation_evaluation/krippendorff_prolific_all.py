@@ -14,7 +14,7 @@ USER_IDS = "all"
 
 
 LANGUAGES = [
-    "en", "MAIN "
+    "zh", "MAIN "
 ]
 # FILTERS = ["zh"]
 

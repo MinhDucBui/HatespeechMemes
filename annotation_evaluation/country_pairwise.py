@@ -53,6 +53,8 @@ if __name__ == '__main__':
     print("Number of None values:", none_count)
     df = round(calculate_pairwise_agreement(merged_df), 2)
 
+    print( (df.sum(axis=1) -1)/ 4)
+
     # Step 1: Set up the figure size and style
     plt.figure(figsize=(10, 8))
     sns.set(style='whitegrid')
