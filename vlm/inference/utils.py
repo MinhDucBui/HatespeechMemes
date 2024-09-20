@@ -11,30 +11,29 @@ from annotation_evaluation.utils import process_language_data
 from vlm.inference.local_paths import ANNOTATION_PATH, OUTPUT_FOLDER, IMAGE_FOLDER, CAPTION_FOLDER
 
 # Caption
-ADD_CAPTION = True
-PREFIX = "test"
+# ADD_CAPTION = False
+PREFIX = "image_atend"
 
 # Prompt Definition
-PROMPT_NUMBER = 4
 PROMPT_PREFIX = "Definition of Hate Speech:\n\nAny kind of communication [...], that attacks or uses pejorative or discriminatory language with reference to a person or a group on the basis of who they are, in other words, based on their religion, ethnicity, nationality, race, colour, descent, gender or other identity factor.\n\n"
 PROMPT_POSTFIX = ["\n\na: Hate\nb: Non-hate\n", "\n\na: Non-hate\nb: Hate\n"]
 PROMPTS = [
     "Answer if this meme is hate or not with a single alphabet letter among given answer choices a and b.",
     "Given a meme from online, answer if it is 'Hate Speech' or 'Non-Hate Speech'. Answer with only one single alphabet between 'a' and 'b', with no other description.",
-    # "Would you consider this meme as a hate speech? Give an answer in a single alphabet only.",
+    "Would you consider this meme as a hate speech? Give an answer in a single alphabet only.",
     # "Do you think this is a hate speech? Answer with only one single alphabet between 'a' and 'b', with no other description.",
     # "Would you consider this meme as a hate speech? Give an answer in a single alphabet only.",
 ]
+PROMPT_NUMBER = len(PROMPTS) * len(PROMPT_POSTFIX)
 PROMPT_CAPTION = "\nCaption inside the meme image: '{}'\nChoose:"
-
 
 def get_device_map() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
-def name_output_file(model_path, output_folder, language):
+def name_output_file(model_path, output_folder, language, add_caption):
     model_postfix = model_path.split("/")[-3]
-    if ADD_CAPTION:
+    if add_caption:
         model_postfix = model_postfix + "_caption"
     if PREFIX:
         model_postfix = PREFIX + model_postfix
@@ -78,7 +77,7 @@ def process_translations(final_dataset, language):
     return df_annotation
 
 
-def pipeline_inference(model_path, languages, input_creator, model_creator, model_inference, add_caption=ADD_CAPTION):
+def pipeline_inference(model_path, languages, input_creator, model_creator, model_inference, add_caption=False):
     # Model Creation
     model = model_creator(model_path)
 
@@ -133,14 +132,14 @@ def pipeline_inference(model_path, languages, input_creator, model_creator, mode
             id_image = str(image_path.split("/")[-1].split(".")[0])
             results_df["ID"].append(id_image)
             index_prompt = idx % PROMPT_NUMBER
-            results_df["prompt"].append(index_prompt)
+            results_df["prompt"].append(index_prompt + 4)
             results_df["response"].append(response_text)
 
             if idx % 100 == 0:
                 save_df = pd.DataFrame(results_df)
-                output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
+                output_file = name_output_file(model_path, OUTPUT_FOLDER, language, add_caption)
                 save_df.to_csv(output_file, index=False)
 
         save_df = pd.DataFrame(results_df)
-        output_file = name_output_file(model_path, OUTPUT_FOLDER, language)
+        output_file = name_output_file(model_path, OUTPUT_FOLDER, language, add_caption)
         save_df.to_csv(output_file, index=False)
