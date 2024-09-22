@@ -18,22 +18,28 @@ def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption
     processed_prompts = []
     for image_path in image_paths:
         for raw_prompt in all_prompts:
+            prompt_1 = raw_prompt[0]
+            prompt_2 = raw_prompt[1]
             if add_caption:
                 id_image = image_path.split("/")[-1].split(".jpg")[0]
                 caption = df_captions[df_captions["ID"]
                                       == id_image]["Translation"].iloc[0]
-                text_prompt = {"type": "text", "text": raw_prompt.format(str(caption))}
+                text_prompt_1 = {"type": "text", "text": prompt_1.format(str(caption))}
+                text_prompt_2 = {"type": "text", "text": prompt_2.format(str(caption))}
             else:
-                text_prompt = {"type": "text", "text": raw_prompt}
+                text_prompt_1 = {"type": "text", "text": prompt_1}
+                text_prompt_2 = {"type": "text", "text": prompt_2}
 
             conversation = [{
                 "role": "user",
                 "content": [
-                    {"type": "image", "image": image_path},
-                    text_prompt,
+                    text_prompt_1,
+                    {"type": "image"},
+                    text_prompt_2
                 ],
             },
             ]
+
             processed_prompt = processor.apply_chat_template(
                 conversation, add_generation_prompt=True)
             processed_prompts.append(

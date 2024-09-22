@@ -12,20 +12,24 @@ from vlm.inference.local_paths import ANNOTATION_PATH, OUTPUT_FOLDER, IMAGE_FOLD
 
 # Caption
 # ADD_CAPTION = False
-PREFIX = "image_atend"
+UNIMODAL = False
+PREFIX = "image_prompt"
 
 # Prompt Definition
 PROMPT_PREFIX = "Definition of Hate Speech:\n\nAny kind of communication [...], that attacks or uses pejorative or discriminatory language with reference to a person or a group on the basis of who they are, in other words, based on their religion, ethnicity, nationality, race, colour, descent, gender or other identity factor.\n\n"
-PROMPT_POSTFIX = ["\n\na: Hate\nb: Non-hate\n", "\n\na: Non-hate\nb: Hate\n"]
+PROMPT_POSTFIX = ["\nChoose:\na: Hate\nb: Non-hate\n", "\nChoose:\na: Non-hate\nb: Hate\n"]
 PROMPTS = [
     "Answer if this meme is hate or not with a single alphabet letter among given answer choices a and b.",
     "Given a meme from online, answer if it is 'Hate Speech' or 'Non-Hate Speech'. Answer with only one single alphabet between 'a' and 'b', with no other description.",
     "Would you consider this meme as a hate speech? Give an answer in a single alphabet only.",
     # "Do you think this is a hate speech? Answer with only one single alphabet between 'a' and 'b', with no other description.",
+    
     # "Would you consider this meme as a hate speech? Give an answer in a single alphabet only.",
 ]
 PROMPT_NUMBER = len(PROMPTS) * len(PROMPT_POSTFIX)
-PROMPT_CAPTION = "\nCaption inside the meme image: '{}'\nChoose:"
+PROMPT_IMAGE_PREFIX = "\nMeme: "
+PROMPT_CAPTION = "\nCaption inside the meme: '{}'"
+
 
 def get_device_map() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -108,9 +112,9 @@ def pipeline_inference(model_path, languages, input_creator, model_creator, mode
         for prompt in PROMPTS:
             for postfix in PROMPT_POSTFIX:
                 if add_caption:
-                    all_prompts.append(PROMPT_PREFIX + prompt + PROMPT_CAPTION + postfix )
+                    all_prompts.append([PROMPT_PREFIX + prompt + PROMPT_IMAGE_PREFIX, PROMPT_CAPTION + postfix])
                 else:
-                    all_prompts.append(PROMPT_PREFIX + prompt + postfix)
+                    all_prompts.append([PROMPT_PREFIX + prompt + PROMPT_IMAGE_PREFIX, postfix])
 
         # Prompt Creation
         processor, processed_inputs = input_creator(
