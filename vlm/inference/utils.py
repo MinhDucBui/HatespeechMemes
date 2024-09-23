@@ -31,6 +31,22 @@ PROMPT_IMAGE_PREFIX = "\nMeme: "
 PROMPT_CAPTION = "\nCaption inside the meme: '{}'"
 
 
+def create_prompt_for_input(raw_prompt, df_captions, image_path, add_caption):
+    prompt_1 = raw_prompt[0]
+    prompt_2 = raw_prompt[1]
+    if add_caption:
+        id_image = image_path.split("/")[-1].split(".jpg")[0]
+        caption = df_captions[df_captions["ID"]
+                                == id_image]["Translation"].iloc[0]
+        text_prompt_1 = {"type": "text", "text": prompt_1.format(str(caption))}
+        text_prompt_2 = {"type": "text", "text": prompt_2.format(str(caption))}
+    else:
+        text_prompt_1 = {"type": "text", "text": prompt_1}
+        text_prompt_2 = {"type": "text", "text": prompt_2}
+
+    return text_prompt_1, text_prompt_2
+
+
 def get_device_map() -> str:
     return 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -136,7 +152,7 @@ def pipeline_inference(model_path, languages, input_creator, model_creator, mode
             id_image = str(image_path.split("/")[-1].split(".")[0])
             results_df["ID"].append(id_image)
             index_prompt = idx % PROMPT_NUMBER
-            results_df["prompt"].append(index_prompt + 4)
+            results_df["prompt"].append(index_prompt)
             results_df["response"].append(response_text)
 
             if idx % 100 == 0:

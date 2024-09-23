@@ -9,7 +9,7 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 two_dirs_up = os.path.abspath(os.path.join(current_script_dir, '..', '..'))
 sys.path.append(two_dirs_up)
 
-from vlm.inference.utils import pipeline_inference
+from vlm.inference.utils import pipeline_inference, create_prompt_for_input
 
 LANGUAGES = ["en", "de", "es", "hi", "zh"]
 # MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-34b-hf/snapshots/66b6feb83d0249dc9f31a24bd3abfb63f90e41aa"
@@ -27,17 +27,7 @@ def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption
     processed_prompts = []
     for image_path in image_paths:
         for raw_prompt in all_prompts:
-            prompt_1 = raw_prompt[0]
-            prompt_2 = raw_prompt[1]
-            if add_caption:
-                id_image = image_path.split("/")[-1].split(".jpg")[0]
-                caption = df_captions[df_captions["ID"]
-                                      == id_image]["Translation"].iloc[0]
-                text_prompt_1 = {"type": "text", "text": prompt_1.format(str(caption))}
-                text_prompt_2 = {"type": "text", "text": prompt_2.format(str(caption))}
-            else:
-                text_prompt_1 = {"type": "text", "text": prompt_1}
-                text_prompt_2 = {"type": "text", "text": prompt_2}
+            text_prompt_1, text_prompt_2 = create_prompt_for_input(raw_prompt, df_captions, image_path, add_caption)
             
             conversation = [{
                 "role": "user",
@@ -69,10 +59,12 @@ def model_creator(model_path):
                                                               torch_dtype=torch.float16,
                                                               #low_cpu_mem_usage=True,
                                                               device_map="auto")
+                                                            
     return model
 
 
 def model_inference(image_path, prompt, model, processor):
+    #model.generation_config["pad_token_id"] = processor.pad_token_id
     raw_image = Image.open(image_path)
     if UNIMODAL:
         raw_image = None

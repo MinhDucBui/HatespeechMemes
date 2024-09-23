@@ -4,7 +4,7 @@ import os
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
 two_dirs_up = os.path.abspath(os.path.join(current_script_dir, '..', '..'))
 sys.path.append(two_dirs_up)
-
+import copy
 from vlm.inference.local_paths import ANNOTATION_PATH, MODEL_PREDICTIONS
 from annotation_evaluation.utils import process_language_data
 from tqdm import tqdm
@@ -25,22 +25,21 @@ MAPPING = {
 }
 
 def bold_underline_value(list_values):
-    list_copy = list_values.copy()
+    list_copy = copy.deepcopy(list_values)
     for key, value in list_values.items():
         if "--" == value:
             return list_values
 
-    max_key = max(list_values, key=lambda k: float(list_values[k]))
-    min_key = min(list_values, key=lambda k: float(list_values[k]))
+    max_key = max(list_values, key=lambda k: float(list_values[k][0]))
+    min_key = min(list_values, key=lambda k: float(list_values[k][0]))
 
-    max_value = str(list_values[max_key])
+    max_value = str(list_values[max_key][0])
     bolding = "\\textbf{" + max_value + "}"
-    list_copy[max_key] = bolding
+    list_copy[max_key][0] = bolding
 
-    min_value = str(list_values[min_key])
+    min_value = str(list_values[min_key][0])
     bolding = "\\underline{" + min_value + "}"
-    list_copy[min_key] = bolding
-
+    list_copy[min_key][0] = bolding
     return list_copy
 
 def bold_underline_value_caption(list_values1, list_values2):
@@ -92,6 +91,17 @@ def latex_table(latex_preds):
                     bold_underline_value(default_vals) for lang in languages
                 )
 
+        english = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in english.items()}
+        german = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in german.items()}
+        spanish = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in spanish.items()}
+        hindi = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in hindi.items()}
+        mandarin = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in mandarin.items()}
+
+        english_capt = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in english_capt.items()}
+        german_capt = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in german_capt.items()}
+        spanish_capt = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in spanish_capt.items()}
+        hindi_capt = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in hindi_capt.items()}
+        mandarin_capt = {key: str(value[0]) + "\\textsubscript{$\pm " + str(value[1]) + "$}" for key, value in mandarin_capt.items()}
 
         table = f"""
         English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\ \\hline
@@ -105,7 +115,13 @@ def latex_table(latex_preds):
         Mandarin  & {mandarin["US"]} & {mandarin["DE"]} & {mandarin["MX"]} & {mandarin["IN"]} & {mandarin["CN"]} \\\\
         \quad + Caption   & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
         """
-
+        table = f"""
+        English   & {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\
+        German   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\
+        Spanish   & {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\
+        Hindi   & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\
+        Mandarin   & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
+        """
         table = f"""
         English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\
         \quad + Caption   & {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ \\hline
@@ -118,19 +134,9 @@ def latex_table(latex_preds):
         Mandarin  & {mandarin["US"]} & {mandarin["DE"]} & {mandarin["MX"]} & {mandarin["IN"]} & {mandarin["CN"]} \\\\
         \quad + Caption   & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
         """
-
-
-        table = f"""
-        English   & {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\
-        German   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\
-        Spanish   & {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\
-        Hindi   & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\
-        Mandarin   & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
-        """
         print(table)
     
-
-def extract_answer(response):
+def extract_llm_answer(response):
     response = response.lower()
     response = response.split("assistant: ")[-1]
     response = response.split("assistant:")[-1]
@@ -138,6 +144,11 @@ def extract_answer(response):
     response = response.split("answer choice:")[-1]
     response = response.split("answer:")[-1]
     response = response.split("**answer**:")[-1]
+    return response
+
+def extract_answer(response):
+    response = extract_llm_answer(response)
+    response = response.lower()
     response = response.strip()
 
     b_responses = ["b: hate", "b: non-hate", "answer: b"]
@@ -150,11 +161,54 @@ def extract_answer(response):
     response = response.split(" ")[0].split("\n")[0].strip()
     return response 
 
+
+def check_response(response_llm, response, extracted):
+    non_hate_phrases = [
+        "this meme is non-hate", "would rate this meme as non-hate", "non-hate (b)", 
+        "non-hate.", "no", "option 'a'", "a) non-hate", "not hate.", "not hate speech!", 
+        "no, this is not hate speech", "no, the meme is not hate speech", "non-hate", 
+        "non-hate:"
+    ]
+    
+    hate_phrases = [
+        "this meme contains hate speech", "yes", "yes, i would consider this meme as hate speech", 
+        "hate", "yes, I would consider this meme as hate speech"
+    ]
+    
+    unable_to_analyze_phrases = [
+        "i'm sorry but this task involve", "i cannot analyze", "i'd need to have the meme text translated", 
+        "i am unable to interpret the text", "i am unable to provide the analysis", "c", 
+        "choose your answer by selecting either 'a' or 'b'", "i am unable to assist", 
+        "i'm unable to analyze this meme", "c: unrelated", "i cannot make that determination.", 
+        "i can't provide assistance",
+        "please provide the meme"
+    ]
+    
+    # Check for non-hate phrases
+    if any(phrase in response_llm for phrase in non_hate_phrases):
+        if "b: Non-hate" in response:
+            return 1
+        elif "a: Non-hate" in response:
+            return 0
+    
+    # Check for hate phrases
+    if any(phrase in response_llm for phrase in hate_phrases):
+        if "b: Hate" in response:
+            return 1
+        elif "a: Hate" in response:
+            return 0
+    
+    # Check for unable to analyze phrases
+    if any(phrase in response_llm for phrase in unable_to_analyze_phrases):
+        return -1
+
+    return -2
+
 def mapping_response(response):
     extracted = extract_answer(response)
 
     a_response = ["a", "a:", "a: hate", "a.", "a:", "a)", "a (**Non-hate**)", "'a'"]
-    b_response = ["b", "b:", "b:", "b)", "b:", "b.", "b: hate", "b: non-hate"]
+    b_response = ["b", "b:", "b:", "b)", "b:", "b.", "b: hate", "b: non-hate", "(b)", "b：hate"]
 
     invalid_response = ["bustin", "busters.kerry", "a.kerry", 
                         "busters.", "bhindiwereview", "bhaving",
@@ -164,23 +218,28 @@ def mapping_response(response):
                         "the"]
 
     # Some more logic:
+    
+    response_llm = extract_llm_answer(response)
+    complex_logic = check_response(response_llm, response, extracted)
+    if complex_logic != -2:
+        return complex_logic
+    """
+    # Some more logic:
     response_ = response.split("Assistant: ")[-1]
-    if "This meme is non-hate" in response_ or "no." in extracted or "no" == extracted or "non-hate" == extracted or "non-hate." == extracted or "Not hate" == response_ or "Not hate." == response_ or "Not hate speech" == response_ or "Not hate speech." == response_:
+    if "Not Hate" in response_ or '"non-hate" speech' in response_ or "No, this is not hate speech" in response_ or "This is not hate speech." in response_ or "This meme is non-hate" in response_ or "no." in extracted or "no" == extracted or "non-hate" == extracted or "non-hate." == extracted or "Not hate" == response_ or "Not hate." == response_ or "Not hate speech" == response_ or "Not hate speech." == response_:
         if "b: Non-hate" in response:
             return 1
         elif "a: Non-hate" in response:
             return 0
-    if "hate" in extracted or "yes" in extracted or "This meme is hate speech" in response_ or "This meme can be considered Hate (a)" in response_:
+    if "Hate Speech" in response_ or "hate speech" in response_ or "hate" in extracted or "yes" in extracted or "This meme is hate speech" in response_ or "This meme can be considered Hate (a)" in response_:
         if "b: Hate" in response:
             return 1
         elif "a: Hate" in response:
             return 0
-    if "it's not possible to confidently determine" in response or "I can't assist" in response or "I must respectfully decline" in response or "I will do my best to help you." in response or "No: Hate" in response or "I cannot view or acknowledge contents" in response or "I would not be able to determine" in response or "I'm unable to provide assistance" in response or "There isn’t enough context" in response or "I cannot confidently provide a definitive answer" in response or "I am unable to determine" in response or "I am unable to provide a detailed analysis" in response or "Please provide the image you'd like to evaluate" in response or "To determine whether this specific meme qualifies as hate speech, one would need to directly analyz" in response or "Without understanding the exact translation or context of the text in the meme" in response or "I'm unable to determine" in response or "I cannot provide a response" in response or "I am unable to determine if the meme is hateful or non-hateful since" in response or "I cannot provide detailed textual analysis of the content in images" in response or "As an AI visual assistant, I do not have the capability to translate" in response or "I cannot assist with tha" in response or "Since I do not understand the language of the text in the meme" in response or extracted in " c " or "Please provide a brief " in response or "Since I'm unable to understand the context of the meme without understanding" in response or "I'm sorry, I can't respond to that request" in response or "I cannot provide a response for this question" in response or "I wouldn't be able to accurately evaluate the meme as its content is not accessible to me" in response or "I cannot provide an analysis based on the text you've provided." in response or "Please provide the text or details from the meme for me" in response or "It is difficult to determine definitively without full context." in response or "Without more additional context, I am unable to assess whether this specific meme is hate speech or not." in response or "I am unable to provide a response as the content of the meme may contain harmful or biased language." in response or "I'm sorry, but this content exceeds the limits of appropriateness that I am designed to handle." in response or "I can't give an answer" in response:
-        return -1
-
-    if extracted in a_response or "a. Non-hate" in response or "option a" in response or "a. Hate" in response:
+    """
+    if extracted in a_response:
         return 0
-    elif extracted in b_response:
+    elif extracted in b_response or response_llm == "choice: b":
         return 1
     elif extracted in invalid_response:
         return -1
@@ -228,10 +287,16 @@ def calc_acc(df, gt_name, predict_name):
 
     # stat_test(df, gt_name, predict_name)
     # df = df[df["prompt"] == 0]
+    accuracy_by_group = calculate_group_accuracy(df, "prompt", gt_name, predict_name)
+    mean_accuracy = round(accuracy_by_group['accuracy'].mean() * 100, 2)
+    std_accuracy = round(accuracy_by_group['accuracy'].std() * 100, 2)
+
+    std = std_accuracy
+    print(f"Mean of accuracy & std: {mean_accuracy}, {std_accuracy}")
     correct_predictions = (df[gt_name] == df[predict_name]).sum()
     total_predictions = len(df)
     accuracy = (correct_predictions / total_predictions) * 100
-    print(f"Accuracy for GT Country {gt_name}: {accuracy:.2f}%")
+    # print(f"Accuracy for GT Country {gt_name}: {accuracy:.2f}%")
 
     # Calculate F1 score
     # y_true = list(df[gt_name])
@@ -239,7 +304,7 @@ def calc_acc(df, gt_name, predict_name):
     # y_pred = [y_true[i] == 0 if pred == -1 else pred for i, pred in enumerate(y_pred)]
     # f1 = f1_score(y_true, y_pred, average='binary') * 100  # Use 'macro' for multi-class classification
 
-    return accuracy
+    return accuracy, std_accuracy
 
 
 if __name__ == '__main__':
@@ -254,7 +319,7 @@ if __name__ == '__main__':
         for folder in dirs:
             if "archive" in root:
                 continue
-            if "models--" in folder:
+            if "image_promptmodels--" in folder:
                 latex_preds[folder] = {}
                 print("\n--------------------" + folder + "-------------")
                 for language in LANGUAGES:
@@ -279,8 +344,8 @@ if __name__ == '__main__':
                     latex_preds[folder][language] = {}
                     # Accuracy
                     for language_eval in LANGUAGES:
-                        accuracy = calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
-                        latex_preds[folder][language][MAPPING[language_eval]] = round(accuracy, 1)
+                        accuracy, std = calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
+                        latex_preds[folder][language][MAPPING[language_eval]] = [round(accuracy, 1), round(std, 1)]
 
                     # N Invalid Responses
                     n_invalid = sum(df_inference["hate_prediction"] == -1)

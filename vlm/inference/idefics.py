@@ -48,7 +48,7 @@ current_script_dir = os.path.dirname(os.path.abspath(__file__))
 two_dirs_up = os.path.abspath(os.path.join(current_script_dir, '..', '..'))
 sys.path.append(two_dirs_up)
 
-from vlm.inference.utils import pipeline_inference
+from vlm.inference.utils import pipeline_inference, create_prompt_for_input
 
 LANGUAGES = ["en", "de", "es", "hi", "zh"]
 # MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-34b-hf/snapshots/66b6feb83d0249dc9f31a24bd3abfb63f90e41aa"
@@ -59,6 +59,8 @@ UNIMODAL = False
 def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption):
     # Input for model_inference()
     processor = AutoProcessor.from_pretrained(model_path)
+    exit_condition = processor.tokenizer("<end_of_utterance>", add_special_tokens=False).input_ids
+    bad_words_ids = processor.tokenizer(["<image>", "<fake_token_around_image>"], add_special_tokens=False).input_ids
 
 
     processor.patch_size = 14
@@ -67,35 +69,20 @@ def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption
     processed_prompts = []
     for image_path in image_paths:
         for raw_prompt in all_prompts:
-            if add_caption:
-                id_image = image_path.split("/")[-1].split(".jpg")[0]
-                caption = df_captions[df_captions["ID"]
-                                      == id_image]["Translation"].iloc[0]
-                text_prompt = {"type": "text", "text": raw_prompt.format(str(caption))}
-            else:
-                text_prompt = {"type": "text", "text": raw_prompt}
+            text_prompt_1, text_prompt_2 = create_prompt_for_input(raw_prompt, df_captions, image_path, add_caption)
             
             raw_image = Image.open(image_path)
             prompts = [
                 [
-                    "User: " + raw_prompt,
+                    "User: " + text_prompt_1,
                     raw_image,
+                    text_prompt_2,
                     "<end_of_utterance>",
                     "\nAssistant:",
                 ],
             ]
-            if UNIMODAL:
-                conversation = [{
-                    "role": "user",
-                    "content": [
-                        text_prompt,
-                    ],
-                },
-                ]
-            processed_prompt = processor.apply_chat_template(
-                conversation, add_generation_prompt=True)
             processed_prompts.append(
-                {"prompt": processed_prompt, "image_path": image_path})
+                {"prompt": [prompts, exit_condition, bad_words_ids], "image_path": image_path})
 
     return processor, processed_prompts
 
@@ -106,14 +93,8 @@ def model_creator(model_path):
 
 
 def model_inference(image_path, prompt, model, processor):
-    
-    if UNIMODAL:
-        raw_image = None
-    inputs = processor(prompts, add_end_of_utterance_token=False, return_tensors="pt").to("cuda")
-    # Generation args
-    exit_condition = processor.tokenizer("<end_of_utterance>", add_special_tokens=False).input_ids
-    bad_words_ids = processor.tokenizer(["<image>", "<fake_token_around_image>"], add_special_tokens=False).input_ids
-    generated_ids = model.generate(**inputs, eos_token_id=exit_condition, bad_words_ids=bad_words_ids, max_length=100)
+    inputs = processor(prompt[0], add_end_of_utterance_token=False, return_tensors="pt").to("cuda")
+    generated_ids = model.generate(**inputs, eos_token_id=prompt[1], bad_words_ids=prompt[2], max_length=100)
     generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
 
     response_text = ""
