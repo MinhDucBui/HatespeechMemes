@@ -9,11 +9,12 @@ sys.path.append(two_dirs_up)
 
 from annotation_evaluation.utils import process_language_data
 from vlm.inference.local_paths import ANNOTATION_PATH, OUTPUT_FOLDER, IMAGE_FOLDER, CAPTION_FOLDER
+from vlm.inference.all_prompts import set_prompts
 
 # Caption
-# ADD_CAPTION = False
+MULTILINGUAL = True
 UNIMODAL = False
-PREFIX = "image_prompt"
+PREFIX = "multilingual_image_prompt"
 
 # Prompt Definition
 PROMPT_PREFIX = "Definition of Hate Speech:\n\nAny kind of communication [...], that attacks or uses pejorative or discriminatory language with reference to a person or a group on the basis of who they are, in other words, based on their religion, ethnicity, nationality, race, colour, descent, gender or other identity factor.\n\n"
@@ -103,6 +104,8 @@ def pipeline_inference(model_path, languages, input_creator, model_creator, mode
 
     for language in languages:
         print("\n-----Processing {} Language\n".format(language))
+        if MULTILINGUAL:
+            PROMPTS, PROMPT_CAPTION, PROMPT_PREFIX, PROMPT_POSTFIX, PROMPT_IMAGE_PREFIX = set_prompts(language)
 
         # Load Captions
         df_captions = process_translations(CAPTION_FOLDER, language)

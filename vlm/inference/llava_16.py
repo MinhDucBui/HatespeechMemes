@@ -11,7 +11,7 @@ sys.path.append(two_dirs_up)
 
 from vlm.inference.utils import pipeline_inference, create_prompt_for_input
 
-LANGUAGES = ["en", "de", "es", "hi", "zh"]
+LANGUAGES = ["de", "es", "hi", "zh"]
 # MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-34b-hf/snapshots/66b6feb83d0249dc9f31a24bd3abfb63f90e41aa"
 # MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/models--llava-hf--llava-v1.6-vicuna-13b-hf/snapshots/e66fcaaa7d502b1037c8465375bb67f4c33758dd"
 # MODEL_PATH = "/lustre/project/ki-topml/minbui/projects/models/sync/models--llava-hf--llava-next-72b-hf/snapshots/834da453803d866c3b45f4f94dc20f5b705d5a88"
@@ -71,7 +71,7 @@ def model_inference(image_path, prompt, model, processor):
     inputs = processor(images=raw_image,
                        text=prompt,
                        return_tensors='pt').to('cuda')
-    output = model.generate(**inputs, max_new_tokens=10,
+    output = model.generate(**inputs, max_new_tokens=50,
                             do_sample=False, temperature=1.0)
     response_text = processor.decode(output[0][2:], skip_special_tokens=True)
     return response_text

@@ -9,7 +9,7 @@ from vlm.inference.utils import pipeline_inference, create_prompt_for_input
 import argparse
 
 
-LANGUAGES = ["en", "de", "es", "hi", "zh"]
+LANGUAGES = ["de", "es", "hi", "zh"]
 
 
 from transformers import Qwen2VLForConditionalGeneration, AutoTokenizer, AutoProcessor
