@@ -48,11 +48,11 @@ PROMPT_PREFIX_MULTI = {
 
 
 PROMPT_POSTFIX_MULTI = {
-    "en": ["\nChoose:\na: Hate\nb: Non-hate\n", "\na: Non-hate\nb: Hate\n"],
-    "de": ["\nWähle:\na: Hass\nb: Kein Hass\n", "\na: Kein Hass\nb: Hass\n"],
-    "es": ["\nElige:\na: Odio\nb: Sin odio\n", "\na: Sin odio\nb: Odio\n"],
-    "hi": ["\nचुनें:\nक: घृणा\nख: गैर नफरत\n", "\nक: गैर नफरत\nख: घृणा\n"],
-    "zh": ["\n请选择：\na：仇恨\nb：非仇恨", "\nb：非仇恨\na：仇恨\n"]
+    "en": ["\nChoose:\na: Hate\nb: Non-hate\n", "\nChoose:\na: Non-hate\nb: Hate\n"],
+    "de": ["\nWähle:\na: Hass\nb: Kein Hass\n", "\nWähle:\na: Kein Hass\nb: Hass\n"],
+    "es": ["\nElige:\na: Odio\nb: Sin odio\n", "\nElige:\na: Sin odio\nb: Odio\n"],
+    "hi": ["\nचुनें:\nक: घृणा\nख: गैर नफरत\n", "\nचुनें:\nक: गैर नफरत\nख: घृणा\n"],
+    "zh": ["\n请选择：\na：仇恨\nb：非仇恨", "\n请选择：\na：非仇恨\nb：仇恨\n"]
 }
 
 PROMPT_IMAGE_PREFIX_MULTI = {

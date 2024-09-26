@@ -26,6 +26,8 @@ MAPPING = {
     "hi": "IN",
     "zh": "CN"
 }
+EVAL_MODELS = "models--gpt_4o_woimage_new"
+
 
 def bold_underline_value(list_values):
     list_copy = copy.deepcopy(list_values)
@@ -33,6 +35,9 @@ def bold_underline_value(list_values):
         if "--" == value:
             return list_values
 
+    # Sort the keys based on the values and get the second largest
+    sorted_keys = sorted(list_values, key=lambda k: float(list_values[k][0]), reverse=True)
+    second_max_key = sorted_keys[1] if len(sorted_keys) > 1 else None
     max_key = max(list_values, key=lambda k: float(list_values[k][0]))
     min_key = min(list_values, key=lambda k: float(list_values[k][0]))
 
@@ -43,6 +48,10 @@ def bold_underline_value(list_values):
     min_value = str(list_values[min_key][0])
     bolding = "\\underline{" + min_value + "}"
     list_copy[min_key][0] = bolding
+
+    min_value = str(list_values[second_max_key][0])
+    bolding = "\\phantom{}" + min_value
+    list_copy[second_max_key][0] = bolding
     return list_copy
 
 def bold_underline_value_caption(list_values1, list_values2):
@@ -61,27 +70,42 @@ def bold_underline_value_caption(list_values1, list_values2):
     return list1_copy, list2_copy
 
 
-def t_test_statistic(row):
+
+def significance_test(row):
     n1 = 6
     n2 = 6
-    min_max_value = [value for key, value in row.items() if "textbf" in str(value[0]) or "underline" in str(value[0])]
+    min_max_value = [value for key, value in row.items() if "textbf" in str(value[0]) or "underline" in str(value[0]) or "phantom" in str(value[0])]
     for index, value in enumerate(min_max_value):
-        match = re.search(r'\\(?:textbf|underline){([\d.]+)}', value[0])
+        match = re.search(r'\\(?:textbf|underline){([\d.]*)}', value[0])
         if match:
-            min_max_value[index] = [float(match.group(1)), value[1]]
+            min_max_value[index] = [float(match.group(1)), value[1], value[3]]
+        if "phantom" in value[0]:
+            value[0] = value[0].replace("\\phantom{}", "")
+            min_max_value[index] = [float(value[0]), value[1], value[3]]
 
-    if min_max_value and len(min_max_value) == 2:
-        _, p_value = stats.ttest_ind_from_stats(min_max_value[0][0], min_max_value[0][1], n1, min_max_value[1][0], min_max_value[1][1], n2, equal_var=False)
+    min_max_value = sorted(min_max_value, key=lambda x: x[0])
+    if min_max_value and len(min_max_value) == 3:
+        # T Test
+        #_, p_value = stats.ttest_ind_from_stats(min_max_value[0][0], min_max_value[0][1], n1, min_max_value[1][0], min_max_value[1][1], n2, equal_var=False)
+        
+        # Wilcoxon Rank Sum
+        p_value = stat_test(min_max_value[0][2], min_max_value[2][2])
         alpha = 0.05
         if p_value < alpha:
             for key, value in row.items():
                 if "textbf" in str(value[0]):
-                    row[key] = [value[0] + "\\textbf{*}", value[1]]
+                    p_value = stat_test(min_max_value[0][2], min_max_value[1][2])
+                    if p_value < alpha:
+                        row[key] = [value[0] + "\\textbf{**}", value[1]]
+                    else:
+                        row[key] = [value[0] + "\\textbf{*}", value[1]]
+
             return row
         else:
             return row
     else:
         return row
+
 
 # def add_std_to_latex():
 
@@ -99,7 +123,7 @@ def latex_table(latex_preds):
     def process_language(preds, languages, default_vals, bold_underline_func):
         """Processes predictions for a given set of languages."""
         return {
-            lang: t_test_statistic(bold_underline_func(preds.get(lang, default_vals))) for lang in languages
+            lang: significance_test(bold_underline_func(preds.get(lang, default_vals))) for lang in languages
         }
 
     def format_language_results(lang_dict):
@@ -119,8 +143,8 @@ def latex_table(latex_preds):
         if compare_two and model + "_caption" in latex_preds:
             preds_capt = latex_preds[model + "_caption"]
             language_stats = [
-                t_test_statistic(bold_underline_value_caption(preds.get(lang, default_vals)), 
-                                t_test_statistic(preds_capt.get(lang, default_vals)))
+                significance_test(bold_underline_value_caption(preds.get(lang, default_vals)), 
+                                significance_test(preds_capt.get(lang, default_vals)))
                 for lang in languages
             ]
         else:
@@ -142,6 +166,14 @@ def latex_table(latex_preds):
 
         english, german, spanish, hindi, mandarin = map(format_language_results, language_stats.values())
         english_capt, german_capt, spanish_capt, hindi_capt, mandarin_capt = map(format_language_results, caption_stats.values())
+
+        table = f"""
+        English   &  {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ 
+        German   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\ 
+        Spanish   &  {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\ 
+        Hindi     & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\ 
+        Mandarin  & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
+        """
         table = f"""
         English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\
         \quad + Caption   & {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ \\hline
@@ -158,16 +190,16 @@ def latex_table(latex_preds):
     
 def extract_llm_answer(response):
     response = response.lower()
-    response = response.split("assistant: ")[-1]
-    response = response.split("assistant:")[-1]
-    response = response.split("assistant\n")[-1]
-    response = response.split("assistant")[-1]
-    response = response.split("answer choice:")[-1]
-    response = response.split("answer:")[-1]
-    response = response.split("antwort:")[-1]
-    response = response.split("mi respuesta es:")[-1]
-    response = response.split("respuesta:")[-1]
-    response = response.split("**answer**:")[-1]
+    prefixes = [
+        "assistant: ", "assistant:", "assistant\n", "assistant",
+        "answer choice:", "answer:", "antwort:", "mi respuesta es:", 
+        "respuesta:", "respondo:", "选择：", "选项:", "答案:", 
+        "答:", "选择 ", "答案：", "选择选项:"
+    ]
+
+    for prefix in prefixes:
+        if prefix in response:
+            response = response.split(prefix)[-1]
     return response
 
 def extract_answer(response):
@@ -191,14 +223,16 @@ def check_response(response_llm, response, extracted):
         "this meme is non-hate", "would rate this meme as non-hate", "non-hate (b)", 
         "non-hate.", "no", "option 'a'", "a) non-hate", "not hate.", "not hate speech!", 
         "no, this is not hate speech", "no, the meme is not hate speech", "non-hate", 
-        "non-hate:", "गैर नफरत", "sin odio", "नहीं\n\n", "不属于仇恨言论", "不一定是仇恨言论", "**答案**：b：非仇恨",
-        "答案：b：非仇恨", "- क (नॉन-द्वेष)", "नफरत नहीं", "गैर-नफरत"
+        "non-hate:", "गैर नफरत", "sin odio", "नहीं\n\n", "不属于仇恨言论", "不一定是仇恨言论",
+        "答案：b：非仇恨", "- क (नॉन-द्वेष)", "नफरत नहीं", "गैर-नफरत", "a：非仇恨", "非仇恨",
+        "这个表情包中的内容并未表现出任何攻击或侮辱的情感", "答案：b，非仇恨", "b: 非仇恨", "b. 非仇恨", "a：非仇恨", "b：非仇恨", "b：非仇恨"
     ]
     
     hate_phrases = [
         "this meme contains hate speech", "yes, i would consider this meme as hate speech", 
         "hate", "yes, I would consider this meme as hate speech", "h8", "घृणा", "घृणा",
-        "enthält eine hassrede", "enthält eine form von hassre", "hass", "a: odio", "नफरत"
+        "enthält eine hassrede", "enthält eine form von hassre", "hass", "a: odio", "नफरत",
+        "इस मीम का उपयोग अपमानजनक", "नफ़रत", "जी हां, यह मीम घृणित भाषण है", "b：仇恨",
     ]
     
     hate_phrases_equal = [
@@ -214,8 +248,7 @@ def check_response(response_llm, response, extracted):
         "i can't provide assistance",
         "please provide the meme",
         "das meme enthält eine frage, die", "meme enthält eine aussage",
-        "neues jahr!!!", "h.", "मीम इमेज के अंदर कैप्शन", " <sep> ", "अगर आप इस मीम के अंदर कैप्शन को देखते हैं, तो यह एक घ ",
-        "अगर आपके पास इस मीम का अंदर कैप्शन है तो उसमें 'इवी' औ", "अगर आप इस मीम के अंदर कैप्शन को देखते हैं, तो यह एक घ"
+        "neues jahr!!!", "h.", "मैं नहीं जानता।"
     ]
     unable_to_analyze_phrases_equal = [
         "o", "१६", "घ", "घ्रोणी\n\nअत्याचार"
@@ -245,16 +278,20 @@ def mapping_response(response):
     extracted = extract_answer(response)
 
     a_response = ["a", "a:", "a: hate", "a.", "a:", "a)", "a (**Non-hate**)", "'a'", "-a-", 
-                  "क", "a：仇恨", "अ", "antwort: 'a'", "क:", "**a**", "答案: a"]
+                  "क", "a：仇恨", "अ", "antwort: 'a'", "क:", "क.", "**a**", "答案: a", 
+                  "a：非仇恨", "a<|eot_id|>", "का", "答案：a", "答案：a：非仇恨", "回答：a", "答案是：a",
+                  "答：a：非仇恨"]
     b_response = ["b", "b:", "b:", "b)", "b:", "b.", "b: hate", "b: non-hate", "(b)", "b：hate", "*b",
-                  "ख", "b：非仇恨", "ब", "-b:", "ख:", "答案：b"]
+                  "ख", "b：非仇恨", "ब", "-b:", "ख:", "答案：b", "b：仇恨", "ख.", "回答：b", "回答：b：非仇恨",
+                  "b：", "答：b", "选项b：仇恨", "b:非仇恨", ]
 
     invalid_response = ["bustin", "busters.kerry", "a.kerry", 
                         "busters.", "bhindiwereview", "bhaving",
                         "bheye.", "africaarabi.", "bilder.", "banner",
                         "banner", "bhaving", "bust", "bubble",
                         "b.19999999", "bietehrt.", "a120.", "ademon", "b20.",
-                        "the", "h", "an", "g", "d", "e", "aa", "ग", "n"]
+                        "the", "h", "an", "g", "d", "e", "aa", "ग", "n", "keine informationen.",
+                        "दोनों में नहीं", "जी-3", "इतिमान से भरा हुआ हो सकता है."]
 
     # Some more logic:
     
@@ -276,9 +313,11 @@ def mapping_response(response):
         elif "a: Hate" in response:
             return 0
     """
-    if extracted in a_response or  response_llm == "answer (a)":
+    valid_responses_b = ["choice: b", "meme: b", "选项: b", "答案: b"]
+
+    if extracted in a_response or response_llm == "answer (a)":
         return 0
-    elif extracted in b_response or response_llm == "choice: b" or response_llm == "meme: b":
+    elif extracted in b_response or response_llm in valid_responses_b:
         return 1
     elif extracted in invalid_response:
         return -1
@@ -313,13 +352,11 @@ def calculate_group_accuracy(df, group_col, col1, col2):
     accuracy = df_group[[col1, col2]].apply(lambda x: (x[col1] == x[col2]).mean()).reset_index(name='accuracy')
     return accuracy
 
-def stat_test(df, gt_name, predict_name):
-    accuracy_by_group = calculate_group_accuracy(df, "prompt", gt_name, predict_name)
-    accuracy_by_group_us = calculate_group_accuracy(df, "prompt", "US", predict_name)
-    sample1 = np.array(accuracy_by_group_us["accuracy"])
-    sample2 = np.array(accuracy_by_group["accuracy"])
-    a = round(ranksums(sample1, sample2).pvalue, 5)
-    print("Statistic: for {} and {}: {}".format(gt_name, "US", a))
+def stat_test(df1, df2):
+    sample1 = np.array(df1["accuracy"])
+    sample2 = np.array(df2["accuracy"])
+    p_value = round(ranksums(sample1, sample2).pvalue, 5)
+    return p_value
 
 
 def calc_acc(df, gt_name, predict_name):
@@ -345,7 +382,7 @@ def calc_acc(df, gt_name, predict_name):
     # y_pred = [y_true[i] == 0 if pred == -1 else pred for i, pred in enumerate(y_pred)]
     # f1 = f1_score(y_true, y_pred, average='binary') * 100  # Use 'macro' for multi-class classification
 
-    return mean_accuracy, std_accuracy
+    return mean_accuracy, std_accuracy, accuracy_by_group
 
 
 if __name__ == '__main__':
@@ -365,7 +402,7 @@ if __name__ == '__main__':
             for folder in dirs:
                 if "archive" in root:
                     continue
-                if "image_promptmodels--" in folder:
+                if EVAL_MODELS in folder:
                     latex_preds[folder] = {}
                     print("\n--------------------" + folder + "-------------")
                     for language in LANGUAGES:
@@ -391,8 +428,8 @@ if __name__ == '__main__':
                         latex_preds[folder][language] = {}
                         # Accuracy
                         for language_eval in LANGUAGES:
-                            accuracy, std = calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
-                            latex_preds[folder][language][MAPPING[language_eval]] = [round(accuracy, 1), round(std, 1), n_invalid]
+                            accuracy, std, df_acc = calc_acc(df_inference, MAPPING[language_eval], "hate_prediction")
+                            latex_preds[folder][language][MAPPING[language_eval]] = [round(accuracy, 1), round(std, 1), n_invalid, df_acc]
 
 
         latex_table(latex_preds)
