@@ -27,7 +27,7 @@ MAPPING = {
     "hi": "IN",
     "zh": "CN"
 }
-EVAL_MODELS = "new-"
+EVAL_MODELS = "pro_01"
 TABLE_IDX = 0
 
 def bold_underline_value(list_values):
@@ -95,7 +95,7 @@ def significance_test(row):
         if p_value < alpha:
             for key, value in row.items():
                 if "textbf" in str(value[0]):
-                    p_value = stat_test(min_max_value[0][2], min_max_value[1][2])
+                    p_value = stat_test(min_max_value[1][2], min_max_value[2][2])
                     if p_value < alpha:
                         row[key] = [value[0] + "$^{\mathbf{**}}", value[1]]
                     else:
@@ -210,7 +210,7 @@ def extract_llm_answer(response):
         "assistant: ", "assistant:", "assistant\n", "assistant",
         "answer choice:", "answer:", "antwort:", "mi respuesta es:", 
         "respuesta:", "respondo:", "选择：", "选项:", "答案:", 
-        "答:", "选择 ", "答案：", "选择选项:"
+        "答:", "选择 ", "答案：", "选择选项:", "the answer is "
     ]
 
     for prefix in prefixes:
@@ -240,25 +240,31 @@ def check_response(response_llm, response, extracted):
         "non-hate.", "no", "option 'a'", "a) non-hate", "not hate.", "not hate speech!", 
         "no, this is not hate speech", "no, the meme is not hate speech", "non-hate", 
         "non-hate:", "गैर नफरत", "sin odio", "नहीं\n\n", "不属于仇恨言论", "不一定是仇恨言论",
-        "答案：b：非仇恨", "- क (नॉन-द्वेष)", "नफरत नहीं", "गैर-नफरत", "a：非仇恨", "非仇恨",
+        "答案：b：非仇恨", "- क (नॉन-द्वेष)", "नफरत नहीं", "गैर-नफरत", "a：非仇恨", "非仇恨", "n. \n\nthis", "n (this meme",
         "这个表情包中的内容并未表现出任何攻击或侮辱的情感", "答案：b，非仇恨", "b: 非仇恨", "b. 非仇恨", "a：非仇恨", "b：非仇恨", "b：非仇恨"
     ]
-    
+
+    nonhate_phrases_equal = [
+        "n \n", "n", "n."
+    ]
+
     hate_phrases = [
         "this meme contains hate speech", "yes, i would consider this meme as hate speech", 
         "hate", "yes, I would consider this meme as hate speech", "h8", "घृणा", "घृणा",
         "enthält eine hassrede", "enthält eine form von hassre", "hass", "a: odio", "नफरत",
         "इस मीम का उपयोग अपमानजनक", "नफ़रत", "जी हां, यह मीम घृणित भाषण है", "b：仇恨",
+        "this falls under attacking", "gendered insult often used to demean and belittle someone"
     ]
     
     hate_phrases_equal = [
             "yes",
             "hate",
-            "h8", "घृणा", "घृणा", "hass",  "odio", "odio (a)", "odio (b)"
+            "h8", "घृणा", "घृणा", "hass",  "odio", "odio (a)", "odio (b)",
+            "y \n", "y", "y\n"
         ]
     unable_to_analyze_phrases = [
         "i'm sorry but this task involve", "i cannot analyze", "i'd need to have the meme text translated", 
-        "i am unable to interpret the text", "i am unable to provide the analysis", "c", 
+        "i am unable to interpret the text", "i am unable to provide the analysis", 
         "choose your answer by selecting either 'a' or 'b'", "i am unable to assist", 
         "i'm unable to analyze this meme", "c: unrelated", "i cannot make that determination.", 
         "i can't provide assistance",
@@ -267,11 +273,11 @@ def check_response(response_llm, response, extracted):
         "neues jahr!!!", "h.", "मैं नहीं जानता।"
     ]
     unable_to_analyze_phrases_equal = [
-        "o", "१६", "घ", "घ्रोणी\n\nअत्याचार"
+        "o", "१६", "घ", "घ्रोणी\n\nअत्याचार", "c"
     ]
 
     # Check for non-hate phrases
-    if any(phrase in response_llm for phrase in non_hate_phrases):
+    if any(phrase in response_llm for phrase in non_hate_phrases) or any(phrase == response_llm for phrase in nonhate_phrases_equal):
         if "b: Non-hate" in response or "ख: गैर नफरत" in response or "b: Kein Hass" in response or "b: Sin odio" in response:
             return 1
         elif "a: Non-hate" in response or "क: गैर नफरत" in response or "a: Kein Hass" in response or "a: Sin odio" in response:
@@ -286,6 +292,7 @@ def check_response(response_llm, response, extracted):
     
     # Check for unable to analyze phrases
     if any(phrase in response_llm for phrase in unable_to_analyze_phrases) or any(phrase == response_llm for phrase in unable_to_analyze_phrases_equal):
+        print(f"1: Invalid response encountered: {response} \n Extracted LLM: ---{response_llm}---\n Extracted: ----{extracted}----")
         return -1
 
     return -2
@@ -294,12 +301,12 @@ def mapping_response(response):
     extracted = extract_answer(response)
 
     a_response = ["a", "a:", "a: hate", "a.", "a:", "a)", "a (**Non-hate**)", "'a'", "-a-", 
-                  "क", "a：仇恨", "अ", "antwort: 'a'", "क:", "क.", "**a**", "答案: a", 
+                  "क", "a：仇恨", "अ", "antwort: 'a'", "क:", "क.", "**a**", "答案: a", "**a**.",
                   "a：非仇恨", "a<|eot_id|>", "का", "答案：a", "答案：a：非仇恨", "回答：a", "答案是：a",
                   "答：a：非仇恨"]
     b_response = ["b", "b:", "b:", "b)", "b:", "b.", "b: hate", "b: non-hate", "(b)", "b：hate", "*b",
                   "ख", "b：非仇恨", "ब", "-b:", "ख:", "答案：b", "b：仇恨", "ख.", "回答：b", "回答：b：非仇恨",
-                  "b：", "答：b", "选项b：仇恨", "b:非仇恨", ]
+                  "b：", "答：b", "选项b：仇恨", "b:非仇恨", "**b**", "**b**."]
 
     invalid_response = ["bustin", "busters.kerry", "a.kerry", 
                         "busters.", "bhindiwereview", "bhaving",
@@ -336,9 +343,10 @@ def mapping_response(response):
     elif extracted in b_response or response_llm in valid_responses_b:
         return 1
     elif extracted in invalid_response:
+        print(f"Invalid response encountered: ---{response}--- \n Extracted LLM: ---{response_llm}---\n Extracted: ----{extracted}----")
         return -1
     else:
-        print(f"Invalid response encountered: {response} \n Extracted: {extracted}")
+        print(f"Invalid response encountered: ---{response}--- \n Extracted LLM: ---{response_llm}---\n Extracted: ----{extracted}----")
         return -1
 
 
@@ -403,9 +411,9 @@ def calc_acc(df, gt_name, predict_name):
 if __name__ == '__main__':
 
     # Open the text file in write mode
-    with open('/lustre/project/ki-topml/minbui/repos/HatespeechMemes/output.txt', 'w', encoding='utf-8') as f:
+    # with open('/lustre/project/ki-topml/minbui/repos/HatespeechMemes/output.txt', 'w', encoding='utf-8') as f:
         # Redirect stdout to the file
-        sys.stdout = f
+        # sys.stdout = f
 
         df_gt = process_language_data(ANNOTATION_PATH)
         df_gt = df_gt.reset_index()
@@ -440,6 +448,7 @@ if __name__ == '__main__':
                         df_inference = pd.merge(df_inference, df_gt, on="ID")
                         # N Invalid Responses
                         n_invalid = sum(df_inference["hate_prediction"] == -1)
+                        print(n_invalid)
                         latex_preds[folder][language] = {}
                         # Accuracy
                         for language_eval in LANGUAGES:
