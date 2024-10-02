@@ -1,5 +1,6 @@
+from transformers import AutoModelForCausalLM, AutoProcessor, GenerationConfig
+from PIL import Image
 from qwen_vl_utils import process_vision_info
-from transformers import Qwen2VLForConditionalGeneration, AutoProcessor
 import sys
 import os
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +15,12 @@ UNIMODAL = False
 
 def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption):
     # Input for model_inference()
-    processor = AutoProcessor.from_pretrained(model_path)
+    processor = AutoProcessor.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        torch_dtype='auto',
+        device_map='auto'
+    )
     processed_prompts = []
     for image_path in image_paths:
         for raw_prompt in all_prompts:
@@ -34,11 +40,17 @@ def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption
                 },
                 ]
             else:
+                inputs = processor.process(
+                            images=[Image.open(image_path)],
+                            text=["Describe this image."]
+                         )
+                print(inputs)
+                das
                 conversation = [{
                     "role": "user",
                     "content": [
                         text_prompt_1,
-                        {"type": "image", "image": image_path},
+                        {"type": "image"},
                         text_prompt_2
                     ],
                 },
@@ -53,25 +65,31 @@ def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption
 
 
 def model_creator(model_path):
-    model = Qwen2VLForConditionalGeneration.from_pretrained(
-        model_path, torch_dtype="auto", device_map="auto"
+    # load the model
+    model = AutoModelForCausalLM.from_pretrained(
+        model_path,
+        trust_remote_code=True,
+        torch_dtype='auto',
+        device_map='auto'
     )
     return model
 
 
 def model_inference(prompt, model, processor):
-    image_inputs, video_inputs = process_vision_info(prompt[0])
-    inputs = processor(
-        text=[prompt[1]],
-        images=image_inputs,
-        videos=video_inputs,
-        padding=True,
-        return_tensors="pt",
+    inputs = {k: v.to(model.device).unsqueeze(0) for k, v in prompt.items()}
+    output = model.generate_from_batch(
+        prompt,
+        GenerationConfig(max_new_tokens=200, stop_strings="<|endoftext|>"),
+        tokenizer=processor.tokenizer
     )
-    inputs = inputs.to("cuda")
-    output = model.generate(**inputs, max_new_tokens=40, do_sample=False, top_k=None)
-    response_text = processor.decode(output[0][2:], skip_special_tokens=True)
-    return response_text
+
+    # only get generated tokens; decode them to text
+    generated_tokens = output[0,inputs['input_ids'].size(1):]
+    generated_text = processor.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+
+    # print the generated text
+    print(generated_text)
+    return generated_text
 
 
 if __name__ == '__main__':
@@ -79,7 +97,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run pipeline inference with specified model path.')
 
     # Add an argument for MODEL_PATH
-    parser.add_argument('--model_path', type=str, required=False, default='/lustre/project/ki-topml/minbui/projects/models/models--Qwen--Qwen2-VL-7B-Instruct/snapshots/3ca981c995b0ce691d85d8408216da11ff92f690')
+    parser.add_argument('--model_path', type=str, required=False, default='/lustre/project/ki-topml/minbui/projects/models/sync/models--allenai--Molmo-7B-D-0924/snapshots/b72f6745657cddaf97041d88eb02b23756338219')
     parser.add_argument('--caption', action='store_true', help='Enable captioning')
     args = parser.parse_args()
 

@@ -14,6 +14,7 @@ from sklearn.metrics import f1_score
 import numpy as np
 from scipy import stats
 import re
+np.seterr(divide='ignore', invalid='ignore')
 
 
 tqdm.pandas()
@@ -26,8 +27,8 @@ MAPPING = {
     "hi": "IN",
     "zh": "CN"
 }
-EVAL_MODELS = "models--gpt_4o_woimage_new"
-
+EVAL_MODELS = "new-"
+TABLE_IDX = 0
 
 def bold_underline_value(list_values):
     list_copy = copy.deepcopy(list_values)
@@ -96,9 +97,9 @@ def significance_test(row):
                 if "textbf" in str(value[0]):
                     p_value = stat_test(min_max_value[0][2], min_max_value[1][2])
                     if p_value < alpha:
-                        row[key] = [value[0] + "\\textbf{**}", value[1]]
+                        row[key] = [value[0] + "$^{\mathbf{**}}", value[1]]
                     else:
-                        row[key] = [value[0] + "\\textbf{*}", value[1]]
+                        row[key] = [value[0] + "$^{\mathbf{*}}", value[1]]
 
             return row
         else:
@@ -115,9 +116,13 @@ def latex_table(latex_preds):
         """Helper function to format values as LaTeX strings."""
         if value == "--":
             return ""
-        text = f"{value[0]}\\textsubscript{{$\pm {value[1]}$}}"
-        if key == "US":
-            text = " {} & ".format(value[2]) + text
+        if "*" in str(value[0]):
+            text = f"{value[0]}_{{\pm{value[1]}}}$"
+        else:
+            text = f"{value[0]}$_{{\pm {value[1]}}}$"
+
+        #if key == "US":
+        #    text = " {} & ".format(value[2]) + text
         return text
 
     def process_language(preds, languages, default_vals, bold_underline_func):
@@ -167,25 +172,36 @@ def latex_table(latex_preds):
         english, german, spanish, hindi, mandarin = map(format_language_results, language_stats.values())
         english_capt, german_capt, spanish_capt, hindi_capt, mandarin_capt = map(format_language_results, caption_stats.values())
 
-        table = f"""
-        English   &  {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ 
-        German   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\ 
-        Spanish   &  {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\ 
-        Hindi     & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\ 
-        Mandarin  & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
-        """
-        table = f"""
-        English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\
-        \quad + Caption   & {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ \\hline
-        German    & {german["US"]} & {german["DE"]} & {german["MX"]} & {german["IN"]} & {german["CN"]} \\\\
-        \quad + Caption   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\ \\hline
-        Spanish   & {spanish["US"]} & {spanish["DE"]} & {spanish["MX"]} & {spanish["IN"]} & {spanish["CN"]} \\\\
-        \quad + Caption   & {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\ \\hline
-        Hindi     & {hindi["US"]} & {hindi["DE"]} & {hindi["MX"]} & {hindi["IN"]} & {hindi["CN"]} \\\\
-        \quad + Caption   & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\  \\hline
-        Mandarin  & {mandarin["US"]} & {mandarin["DE"]} & {mandarin["MX"]} & {mandarin["IN"]} & {mandarin["CN"]} \\\\
-        \quad + Caption   & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
-        """
+        
+        if TABLE_IDX == 0:
+            table = f"""
+            English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\
+            \quad + Caption   & {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ \\hline
+            German    & {german["US"]} & {german["DE"]} & {german["MX"]} & {german["IN"]} & {german["CN"]} \\\\
+            \quad + Caption   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\ \\hline
+            Spanish   & {spanish["US"]} & {spanish["DE"]} & {spanish["MX"]} & {spanish["IN"]} & {spanish["CN"]} \\\\
+            \quad + Caption   & {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\ \\hline
+            Hindi     & {hindi["US"]} & {hindi["DE"]} & {hindi["MX"]} & {hindi["IN"]} & {hindi["CN"]} \\\\
+            \quad + Caption   & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\  \\hline
+            Mandarin  & {mandarin["US"]} & {mandarin["DE"]} & {mandarin["MX"]} & {mandarin["IN"]} & {mandarin["CN"]} \\\\
+            \quad + Caption   & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
+            """
+        elif TABLE_IDX == 1:
+            table = f"""
+            English   &  {english_capt["US"]} & {english_capt["DE"]} & {english_capt["MX"]} & {english_capt["IN"]} & {english_capt["CN"]} \\\\ 
+            German   & {german_capt["US"]} & {german_capt["DE"]} & {german_capt["MX"]} & {german_capt["IN"]} & {german_capt["CN"]} \\\\ 
+            Spanish   &  {spanish_capt["US"]} & {spanish_capt["DE"]} & {spanish_capt["MX"]} & {spanish_capt["IN"]} & {spanish_capt["CN"]} \\\\ 
+            Hindi     & {hindi_capt["US"]} & {hindi_capt["DE"]} & {hindi_capt["MX"]} & {hindi_capt["IN"]} & {hindi_capt["CN"]} \\\\ 
+            Mandarin  & {mandarin_capt["US"]} & {mandarin_capt["DE"]} & {mandarin_capt["MX"]} & {mandarin_capt["IN"]} & {mandarin_capt["CN"]} \\\\
+            """
+        elif TABLE_IDX == 2:
+            table = f"""
+            English   & {english["US"]} & {english["DE"]} & {english["MX"]} & {english["IN"]} & {english["CN"]} \\\\
+            German    & {german["US"]} & {german["DE"]} & {german["MX"]} & {german["IN"]} & {german["CN"]} \\\\
+            Spanish   & {spanish["US"]} & {spanish["DE"]} & {spanish["MX"]} & {spanish["IN"]} & {spanish["CN"]} \\\\
+            Hindi     & {hindi["US"]} & {hindi["DE"]} & {hindi["MX"]} & {hindi["IN"]} & {hindi["CN"]} \\\\
+            Mandarin  & {mandarin["US"]} & {mandarin["DE"]} & {mandarin["MX"]} & {mandarin["IN"]} & {mandarin["CN"]} \\\\
+            """
         print(table)
     
 def extract_llm_answer(response):
@@ -369,7 +385,6 @@ def calc_acc(df, gt_name, predict_name):
     # print(accuracy_by_group['accuracy'])
     mean_accuracy = round(accuracy_by_group['accuracy'].mean() * 100, 2)
     std_accuracy = round(np.std(np.array(accuracy_by_group['accuracy']), ddof=1) * 100, 2)
-
     # print(f"Mean of accuracy & std: {mean_accuracy}, {std_accuracy}")
     # correct_predictions = (df[gt_name] == df[predict_name]).sum()
     # total_predictions = len(df)

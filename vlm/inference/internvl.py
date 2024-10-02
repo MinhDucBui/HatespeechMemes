@@ -16,8 +16,8 @@ import argparse
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
-LANGUAGES = ["de", "es", "hi", "zh"]
-
+LANGUAGES = ["en", "de", "es", "hi", "zh"]
+UNIMODAL = False
 
 def split_model(model_name):
     device_map = {}
@@ -126,9 +126,24 @@ def input_creator(all_prompts, image_paths, model_path, df_captions, add_caption
     for image_path in image_paths:
         for raw_prompt in all_prompts:
             text_prompt_1, text_prompt_2 = create_prompt_for_input(raw_prompt, df_captions, image_path, add_caption)
-
-            conversation = text_prompt_1["text"] + "<image>" + text_prompt_2["text"]
-            pixel_values = load_image(image_path, max_num=12).to(torch.bfloat16).cuda()
+            if UNIMODAL:
+                text_prompt_1["text"] = text_prompt_1["text"][:-7]
+                text_prompt_2["text"] = text_prompt_2["text"].replace("Caption inside the meme:", "Text:")
+                text_prompt_1["text"] = text_prompt_1["text"].replace("meme", "text")
+                text_prompt_2["text"] = text_prompt_2["text"].replace("meme", "text")
+                conversation = [{
+                    "role": "user",
+                    "content": [
+                        text_prompt_1,
+                        text_prompt_2,
+                    ],
+                },
+                ]
+                conversation = text_prompt_1["text"] + "<image>" + text_prompt_2["text"]
+                pixel_values = None
+            else:
+                conversation = text_prompt_1["text"] + "<image>" + text_prompt_2["text"]
+                pixel_values = load_image(image_path, max_num=12).to(torch.bfloat16).cuda()
             processed_prompts.append(
                 {"prompt": [conversation, pixel_values, generation_config]})
 
